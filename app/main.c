@@ -25,15 +25,21 @@
 #define USART1_TDR_ADDRESS (unsigned int)(&(USART1->TDR))
 #define ADC1_DMA_CHANNEL DMA1_Channel1
 #define ADC1_DR_ADDRESS (uint32_t)(&(ADC1->DR))
-#define VOLTAGE_CHANNEL ADC_Channel_5
+#if defined STM32F030K6T6
+   #define HUMIDITY_SENSOR_ADC_CHANNEL ADC_Channel_7 // See ADC pin
+#elif defined STM32F030F4P6
+   #define HUMIDITY_SENSOR_ADC_CHANNEL
+#endif
 
 #if defined STM32F030K6T6
-   #define NETWORK_STATUS_LED_PIN GPIO_Pin_5
+   #define NETWORK_STATUS_LED_PIN GPIO_Pin_1
    #define NETWORK_STATUS_LED_PORT GPIOA
-   #define SERVER_AVAILABILITI_LED_PIN GPIO_Pin_6
+   #define SERVER_AVAILABILITI_LED_PIN GPIO_Pin_2
    #define SERVER_AVAILABILITI_LED_PORT GPIOA
-   #define ESP8266_CONTROL_PIN GPIO_Pin_15
+   #define ESP8266_CONTROL_PIN GPIO_Pin_12
    #define ESP8266_CONTROL_PORT GPIOA
+   #define HUMIDITY_SENSOR_ADC_PIN GPIO_Pin_7
+   #define HUMIDITY_SENSOR_ADC_PORT GPIOA
 #elif defined STM32F030F4P6
    #define NETWORK_STATUS_LED_PIN GPIO_Pin_1
    #define NETWORK_STATUS_LED_PORT GPIOA
@@ -41,6 +47,8 @@
    #define SERVER_AVAILABILITI_LED_PORT GPIOA
    #define ESP8266_CONTROL_PIN GPIO_Pin_5
    #define ESP8266_CONTROL_PORT GPIOA
+   #define HUMIDITY_SENSOR_ADC_PIN
+   #define HUMIDITY_SENSOR_ADC_PORT
 #endif
 
 // General flags
@@ -48,6 +56,7 @@
 #define SERVER_IS_AVAILABLE_FLAG 2
 #define SUCCESSUFULLY_CONNECTED_TO_NETWORK_FLAG 4
 #define SEND_DEBUG_INFO_FLAG 8
+#define TURN_FAN_ON_FLAG 16
 
 #define GET_VISIBLE_NETWORK_LIST_TASK 1
 #define DISABLE_ECHO_TASK 2
@@ -66,6 +75,8 @@
 #define GET_CONNECTION_STATUS_TASK 16384
 #define GET_SERVER_AVAILABILITY_REQUEST_TASK 32768
 #define GET_SERVER_AVAILABILITY_TASK 65536
+#define SEND_FAN_INFO_TASK 131072
+#define SEND_FAN_INFO_REQUEST_TASK 262144
 
 #define USART_DATA_RECEIVED_BUFFER_SIZE 1000
 #define PIPED_REQUEST_COMMANDS_TO_SEND_SIZE 3
@@ -133,10 +144,15 @@ char STATUS_JSON[] __attribute__ ((section(".text.const"))) = "{\"gain\":\"<1>\"
 char ESP8226_RESPONSE_OK_STATUS_CODE[] __attribute__ ((section(".text.const"))) = "\"statusCode\":\"OK\"";
 char ESP8226_RESPONSE_HTTP_STATUS_400_BAD_REQUEST[] __attribute__ ((section(".text.const"))) = "HTTP/1.1 400 Bad Request";
 char SERVER_STATUS_INCLUDE_DEBUG_INFO[] __attribute__ ((section(".text.const"))) = "\"includeDebugInfo\":true";
+char TURN_FAN_ON[] __attribute__ ((section(".text.const"))) = "\"turnOn\":true";
 char RESPONSE_CLOSED_BY_TOMCAT[] __attribute__ ((section(".text.const"))) = "\r\n+IPD,5:0\r\n\r\nCLOSED\r\n";
 char ESP8226_REQUEST_SEND_STATUS_INFO_AND_GET_SERVER_AVAILABILITY[] __attribute__ ((section(".text.const"))) =
       "POST /server/esp8266/statusInfo HTTP/1.1\r\nContent-Length: <1>\r\nHost: <2>\r\nUser-Agent: ESP8266\r\nContent-Type: application/json\r\nAccept: application/json\r\nConnection: keep-alive\r\n\r\n<3>\r\n";
-
+char ESP8226_REQUEST_SEND_FAN_INFO[] __attribute__ ((section(".text.const"))) =
+      "POST /server/esp8266/bathroomFan HTTP/1.1\r\nContent-Length: <1>\r\nHost: <2>\r\nUser-Agent: ESP8266\r\nContent-Type: application/json\r\nAccept: application/json\r\nConnection: keep-alive\r\n\r\n<3>\r\n";
+char DEBUG_STATUS_AND_FAN_DATA[] __attribute__ ((section(".text.const"))) =
+      "{\"gain\":\"<1>\",\"debugInfoIncluded\":<2>,\"errors\":\"<3>\",\"usartOverrunErrors\":\"<4>\",\"usartIdleLineDetections\":\"<5>\",\"usartNoiseDetection\":\"<6>\",\"usartFramingErrors\":\"<7>\",\"lastErrorTask\":\"<8>\",\"usartData\":\"<9>\",\"timeStamp\":\"<10>\",\"humidity\":\"<11>\",\"temperature\":\"<12>\"}";
+char STATUS_AND_FAN_DATA[] __attribute__ ((section(".text.const"))) = "{\"gain\":\"<1>\",\"debugInfoIncluded\":<2>,\"timeStamp\":\"<3>\",\"humidity\":\"<4>\",\"temperature\":\"<5>\"}";
 char *usart_data_to_be_transmitted_buffer_g = NULL;
 char *received_usart_error_data_g = NULL;
 char usart_data_received_buffer_g[USART_DATA_RECEIVED_BUFFER_SIZE];
@@ -154,9 +170,10 @@ volatile unsigned int last_error_task_g;
 volatile unsigned short network_searching_status_led_counter_g;
 volatile unsigned char esp8266_disabled_counter_g;
 volatile unsigned char esp8266_disabled_timer_g = TIMER14_5S;
-unsigned short checking_connection_status_and_server_availability_timer_g;
+unsigned short checking_connection_status_and_server_availability_timer_g = TIMER14_60S;
 volatile unsigned short visible_network_list_timer_g = TIMER14_10MIN;;
 volatile unsigned char resets_occured_g;
+volatile unsigned short read_humidity_and_temperature_timer_g;
 
 volatile unsigned short usart_overrun_errors_counter_g;
 volatile unsigned short usart_idle_line_detection_counter_g;
@@ -164,6 +181,7 @@ volatile unsigned short usart_noise_detection_counter_g;
 volatile unsigned short usart_framing_errors_counter_g;
 
 __IO unsigned short adc_dma_converted_data;
+volatile float humidity_g;
 
 void IWDG_Config();
 void Clock_Config();
@@ -186,6 +204,8 @@ unsigned char handle_close_connection_task(unsigned int current_piped_task_to_se
 unsigned char handle_get_visible_network_list_task(unsigned int current_piped_task_to_send, unsigned int *sent_task);
 unsigned char handle_get_server_availability_task(unsigned int current_piped_task_to_send);
 unsigned char handle_get_server_availability_request_task(unsigned int current_piped_task_to_send, unsigned int *sent_task);
+unsigned char handle_send_fan_info_task(unsigned int current_piped_task_to_send);
+unsigned char handle_send_fan_info_request_task(unsigned int current_piped_task_to_send, unsigned int *sent_task);
 void reset_device_state();
 void set_flag(unsigned int *flags, unsigned int flag_value);
 void reset_flag(unsigned int *flags, unsigned int flag_value);
@@ -198,6 +218,7 @@ void connect_to_network();
 void get_ap_connection_status();
 void schedule_function_resending(void (*function_to_execute)(), unsigned short timeout, ImmediatelyFunctionExecution execute);
 void get_server_avalability(unsigned int request_task);
+void send_fan_info(unsigned int request_task);
 void send_usard_data(char string[]);
 unsigned char is_usart_response_contains_elements(char *data_to_be_contained[], unsigned char elements_count);
 unsigned char is_usart_response_contains_element(char string_to_be_contained[]);
@@ -237,8 +258,8 @@ unsigned char is_piped_task_to_send_scheduled(unsigned int task);
 unsigned char is_piped_tasks_scheduler_full();
 unsigned char is_piped_tasks_scheduler_empty();
 void schedule_global_function_resending_and_send_request(unsigned int task, unsigned short timeout);
-char *generate_request(char *request_template);
-void *add_debug_info(char *gain, char *debug_info_included, char *response_timestamp);
+char *generate_request(char *request_template, char *json_payload_template, char *json_debug_payload_template, char *humidity, char *temperature);
+void *add_debug_info(char *template, char *gain, char *debug_info_included, char *response_timestamp, char *humidity, char *temperature);
 unsigned int calculate_response_timestamp();
 void get_own_ip_address();
 void set_own_ip_address();
@@ -262,6 +283,8 @@ void DMA1_Channel1_IRQHandler() {
    if (DMA_GetITStatus(DMA1_IT_TC1)) {
       DMA_ClearITPendingBit(DMA1_IT_TC1);
    }
+
+   //add_piped_task_to_send_into_tail(SEND_FAN_INFO_TASK);
 }
 
 void TIM14_IRQHandler() {
@@ -278,6 +301,9 @@ void TIM14_IRQHandler() {
    }
    if (esp8266_disabled_timer_g) {
       esp8266_disabled_timer_g--;
+   }
+   if (read_humidity_and_temperature_timer_g) {
+      read_humidity_and_temperature_timer_g--;
    }
 }
 
@@ -342,7 +368,7 @@ int main() {
    Pins_Config();
    disable_esp8266();
    DMA_Config();
-   ADC_Config();
+   //ADC_Config();
    USART_Config();
    TIMER3_Confing();
    TIMER14_Confing();
@@ -435,10 +461,21 @@ int main() {
             if (not_handled) {
                not_handled = handle_get_server_availability_request_task(current_piped_task_to_send, &sent_task);
             }
+            if (not_handled) {
+               //not_handled = handle_send_fan_info_task(current_piped_task_to_send);
+            }
+            if (not_handled) {
+               //not_handled = handle_send_fan_info_request_task(current_piped_task_to_send, &sent_task);
+            }
          }
 
          check_connection_status_and_server_availability();
          check_visible_network_list();
+
+         if (!read_humidity_and_temperature_timer_g) {
+            read_humidity_and_temperature_timer_g = TIMER14_1S;
+            //ADC_StartOfConversion(ADC1);
+         }
 
          // LED blinking
          if (!read_flag(&general_flags_g, SUCCESSUFULLY_CONNECTED_TO_NETWORK_FLAG) && network_searching_status_led_counter_g >= TIMER3_100MS) {
@@ -530,7 +567,7 @@ unsigned char handle_get_connection_status_task(unsigned int current_piped_task_
 
    if (current_piped_task_to_send == GET_CONNECTION_STATUS_TASK) {
       not_handled = 0;
-      schedule_function_resending(get_ap_connection_status, 2, EXECUTE_FUNCTION_IMMEDIATELY);
+      schedule_function_resending(get_ap_connection_status, 10, EXECUTE_FUNCTION_IMMEDIATELY);
    } else if (read_flag(sent_flag, GET_CONNECTION_STATUS_TASK)) {
       not_handled = 0;
       reset_flag(&sent_task_g, GET_CONNECTION_STATUS_TASK);
@@ -740,7 +777,7 @@ unsigned char handle_get_server_availability_task(unsigned int current_piped_tas
       not_handled = 0;
       // Request 1 part. Preparation
       delete_piped_task(current_piped_task_to_send);
-      get_server_avalability(GET_SERVER_AVAILABILITY_TASK);
+      get_server_avalability(GET_SERVER_AVAILABILITY_REQUEST_TASK);
    }
    return not_handled;
 }
@@ -772,9 +809,59 @@ unsigned char handle_get_server_availability_request_task(unsigned int current_p
                reset_flag(&general_flags_g, SEND_DEBUG_INFO_FLAG);
             }
 
-            // Reset counter to send the next request in the time interval starting from the received time
-            checking_connection_status_and_server_availability_timer_g = TIMER14_30S;
             set_flag(&general_flags_g, SERVER_IS_AVAILABLE_FLAG);
+         } else {
+            add_error();
+         }
+      }
+   }
+   return not_handled;
+}
+
+unsigned char handle_send_fan_info_task(unsigned int current_piped_task_to_send) {
+   unsigned char not_handled = 1;
+
+   if (current_piped_task_to_send == SEND_FAN_INFO_TASK) {
+      not_handled = 0;
+      // Request 1 part. Preparation
+      delete_piped_task(current_piped_task_to_send);
+      send_fan_info(SEND_FAN_INFO_REQUEST_TASK);
+   }
+   return not_handled;
+}
+
+unsigned char handle_send_fan_info_request_task(unsigned int current_piped_task_to_send, unsigned int *sent_task) {
+   unsigned char not_handled = 1;
+
+   if (current_piped_task_to_send == SEND_FAN_INFO_REQUEST_TASK) {
+      not_handled = 0;
+      // Part 2
+      schedule_global_function_resending_and_send_request(SEND_FAN_INFO_REQUEST_TASK, 10);
+   } else if (read_flag(sent_task, SEND_FAN_INFO_REQUEST_TASK)) {
+      not_handled = 0;
+
+      if (is_usart_response_contains_element(ESP8226_RESPONSE_HTTP_STATUS_400_BAD_REQUEST)) {
+         NVIC_SystemReset(); // Sometimes some error occurred
+      } else if (is_usart_response_contains_element(ESP8226_RESPONSE_SUCCSESSFULLY_SENT) && !is_usart_response_contains_element(ESP8226_RESPONSE_OK_STATUS_CODE)) {
+         // Sometimes only "SEND OK" is received. Another data will be received later
+         clear_usart_data_received_buffer();
+      } else {
+         reset_flag(&sent_task_g, SEND_FAN_INFO_REQUEST_TASK);
+
+         if (is_usart_response_contains_element(ESP8226_RESPONSE_OK_STATUS_CODE)) {
+            on_successfully_receive_general_actions();
+
+            if (is_usart_response_contains_element(SERVER_STATUS_INCLUDE_DEBUG_INFO)) {
+               set_flag(&general_flags_g, SEND_DEBUG_INFO_FLAG);
+            } else {
+               reset_flag(&general_flags_g, SEND_DEBUG_INFO_FLAG);
+            }
+
+            if (is_usart_response_contains_element(TURN_FAN_ON)) {
+               set_flag(&general_flags_g, TURN_FAN_ON_FLAG);
+            } else {
+               reset_flag(&general_flags_g, TURN_FAN_ON_FLAG);
+            }
          } else {
             add_error();
          }
@@ -804,8 +891,16 @@ unsigned char handle_get_visible_network_list_task(unsigned int current_piped_ta
 }
 
 void get_server_avalability(unsigned int request_task) {
-   char *request = generate_request(ESP8226_REQUEST_SEND_STATUS_INFO_AND_GET_SERVER_AVAILABILITY);
+   char *request = generate_request(ESP8226_REQUEST_SEND_STATUS_INFO_AND_GET_SERVER_AVAILABILITY, STATUS_JSON, DEBUG_STATUS_JSON, NULL, NULL);
 
+   prepare_http_request(ESP8226_SERVER_IP_ADDRESS, ESP8226_SERVER_PORT, request, NULL, request_task);
+}
+
+void send_fan_info(unsigned int request_task) {
+   char *humidity = num_to_string(adc_dma_converted_data);
+   char *request = generate_request(ESP8226_REQUEST_SEND_FAN_INFO, STATUS_AND_FAN_DATA, DEBUG_STATUS_AND_FAN_DATA, humidity, "-1");
+
+   free(humidity);
    prepare_http_request(ESP8226_SERVER_IP_ADDRESS, ESP8226_SERVER_PORT, request, NULL, request_task);
 }
 
@@ -867,7 +962,7 @@ void add_error() {
    received_usart_error_data_g = get_received_usart_error_data();
 }
 
-char *generate_request(char *request_template) {
+char *generate_request(char *request_template, char *json_payload_template, char *json_debug_payload_template, char *humidity, char *temperature) {
    char *gain = array_to_string(default_access_point_gain_g, DEFAULT_ACCESS_POINT_GAIN_SIZE);
    //char *response_timestamp = num_to_string(calculate_response_timestamp());
    char *response_timestamp = "-1";
@@ -875,10 +970,10 @@ char *generate_request(char *request_template) {
    char *status_json;
 
    if (read_flag(&general_flags_g, SEND_DEBUG_INFO_FLAG)) {
-      status_json = add_debug_info(gain, debug_info_included, response_timestamp);
+      status_json = add_debug_info(json_debug_payload_template, gain, debug_info_included, response_timestamp, humidity, temperature);
    } else {
-      char *parameters_for_status[] = {gain, debug_info_included, response_timestamp, NULL};
-      status_json = set_string_parameters(STATUS_JSON, parameters_for_status);
+      char *parameters_for_status[] = {gain, debug_info_included, response_timestamp, humidity, temperature, NULL};
+      status_json = set_string_parameters(json_payload_template, parameters_for_status);
    }
    free(gain);
 
@@ -897,7 +992,7 @@ char *generate_request(char *request_template) {
    return request;
 }
 
-void *add_debug_info(char *gain, char *debug_info_included, char *response_timestamp) {
+void *add_debug_info(char *template, char *gain, char *debug_info_included, char *response_timestamp, char *humidity, char *temperature) {
    char *errors_amount_string = num_to_string(send_usart_data_errors_unresetable_counter_g);
    char *usart_overrun_errors_counter_string = num_to_string(usart_overrun_errors_counter_g);
    char *usart_idle_line_detection_counter_string = num_to_string(usart_idle_line_detection_counter_g);
@@ -907,8 +1002,8 @@ void *add_debug_info(char *gain, char *debug_info_included, char *response_times
    char *received_usart_error_data = last_error_task_g && received_usart_error_data_g != NULL ? received_usart_error_data_g : "";
    char *parameters_for_status[] = {gain, debug_info_included, errors_amount_string, usart_overrun_errors_counter_string,
          usart_idle_line_detection_counter_string, usart_noise_detection_counter_string, usart_framing_errors_counter_string,
-         last_error_task_string, received_usart_error_data, response_timestamp, NULL};
-   char *status_json = set_string_parameters(DEBUG_STATUS_JSON, parameters_for_status);
+         last_error_task_string, received_usart_error_data, response_timestamp, humidity, temperature, NULL};
+   char *status_json = set_string_parameters(template, parameters_for_status);
 
    free(errors_amount_string);
    free(usart_overrun_errors_counter_string);
@@ -1419,7 +1514,7 @@ void DMA_Config() {
    DMA_Cmd(USART1_TX_DMA_CHANNEL, ENABLE);
 
    // ADC DMA config
-   DMA_InitTypeDef adcDmaInitType;
+   /*DMA_InitTypeDef adcDmaInitType;
    adcDmaInitType.DMA_PeripheralBaseAddr = ADC1_DR_ADDRESS;
    adcDmaInitType.DMA_MemoryBaseAddr = (uint32_t)(&adc_dma_converted_data);
    adcDmaInitType.DMA_DIR = DMA_DIR_PeripheralSRC;
@@ -1436,7 +1531,7 @@ void DMA_Config() {
    DMA_ITConfig(ADC1_DMA_CHANNEL, DMA_IT_TC, ENABLE);
    NVIC_SetPriority(ADC1_IRQn, 30); // Higher than timers have
    NVIC_EnableIRQ(DMA1_Channel1_IRQn);
-   DMA_Cmd(ADC1_DMA_CHANNEL, ENABLE);
+   DMA_Cmd(ADC1_DMA_CHANNEL, ENABLE);*/
 }
 
 void USART_Config() {
@@ -1469,11 +1564,11 @@ void ADC_Config()
    RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
 
    GPIO_InitTypeDef gpioInitType;
-   gpioInitType.GPIO_Pin = GPIO_Pin_5;
+   gpioInitType.GPIO_Pin = HUMIDITY_SENSOR_ADC_PIN;
    gpioInitType.GPIO_PuPd = GPIO_PuPd_NOPULL;
    gpioInitType.GPIO_Mode = GPIO_Mode_AN;
    gpioInitType.GPIO_Speed = GPIO_Speed_Level_1; // Low 2 MHz
-   GPIO_Init(GPIOA, &gpioInitType);
+   GPIO_Init(HUMIDITY_SENSOR_ADC_PORT, &gpioInitType);
 
    ADC_InitTypeDef adcInitType;
    adcInitType.ADC_ContinuousConvMode = ENABLE;
@@ -1486,7 +1581,7 @@ void ADC_Config()
    ADC_DMARequestModeConfig(ADC1, ADC_DMAMode_Circular);
    ADC_DMACmd(ADC1, ENABLE);
 
-   ADC_ChannelConfig(ADC1, VOLTAGE_CHANNEL, ADC_SampleTime_41_5Cycles);
+   ADC_ChannelConfig(ADC1, HUMIDITY_SENSOR_ADC_CHANNEL, ADC_SampleTime_41_5Cycles);
 
    ADC_AutoPowerOffCmd(ADC1, ENABLE);
 
@@ -1665,7 +1760,11 @@ void *num_to_string(unsigned int number) {
    unsigned char string_length = 0;
 
    while (string_size > 0) {
-      unsigned char result_character = get_first_digit(remaining);
+      unsigned char last_digit_was_zero = 0;
+      if (remaining < divider) {
+         last_digit_was_zero = 1;
+      }
+      unsigned char result_character = last_digit_was_zero ? 0 : get_first_digit(remaining);
       //unsigned char result_character = (unsigned char) (remaining / divider);
 
       if (result_string_pointer == NULL && result_character) {
@@ -1677,7 +1776,9 @@ void *num_to_string(unsigned int number) {
          *(result_string_pointer + index) = result_character + '0';
       }
 
-      remaining -= result_character * divider;
+      if (!last_digit_was_zero) {
+         remaining -= result_character * divider;
+      }
       divider = divide_by_10(divider);
       //divider /= 10;
       string_size--;

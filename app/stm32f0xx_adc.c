@@ -873,13 +873,13 @@ uint32_t ADC_GetCalibrationFactor(ADC_TypeDef* ADCx)
   * @param  ADCx: where x can be 1 to select the ADC1 peripheral.
   * @retval None
   */
-/*void ADC_StartOfConversion(ADC_TypeDef* ADCx)
+void ADC_StartOfConversion(ADC_TypeDef* ADCx)
 {
   // Check the parameters 
   assert_param(IS_ADC_ALL_PERIPH(ADCx));
   
   ADCx->CR |= (uint32_t)ADC_CR_ADSTART;
-}*/
+}
 
 /**
   * @brief  Returns the last ADCx conversion result data for ADC channel.  
