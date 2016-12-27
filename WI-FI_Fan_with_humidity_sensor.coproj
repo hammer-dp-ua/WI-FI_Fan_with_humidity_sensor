@@ -80,6 +80,7 @@
   </Components>
   <LocalComponents/>
   <Files>
+    <File name="HIH-4021-004_18133300053.h" path="app/HIH-4021-004_18133300053.h" type="1"/>
     <File name="components/cmsis_core/core_cmInstr.h" path="components/coocox-master/cmsis_core/source/core_cmInstr.h" type="1"/>
     <File name="components/stm32f0xx.h" path="components/stm32f0xx.h" type="1"/>
     <File name="components/core_cmFunc.h" path="components/core_cmFunc.h" type="1"/>
@@ -91,6 +92,7 @@
     <File name="components/stm32f0xx_dbgmcu.h" path="components/stm32f0xx_dbgmcu.h" type="1"/>
     <File name="components/arm_math.h" path="components/arm_math.h" type="1"/>
     <File name="components/cmsis_core/core_sc300.h" path="components/coocox-master/cmsis_core/source/core_sc300.h" type="1"/>
+    <File name="main.h" path="app/main.h" type="1"/>
     <File name="stm32f0xx_rtc.c" path="app/stm32f0xx_rtc.c" type="1"/>
     <File name="stm32f0xx_rcc.c" path="app/stm32f0xx_rcc.c" type="1"/>
     <File name="components/cmsis_core/core_cm4_simd.h" path="components/coocox-master/cmsis_core/source/core_cm4_simd.h" type="1"/>
