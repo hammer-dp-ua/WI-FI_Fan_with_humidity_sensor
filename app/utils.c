@@ -1,5 +1,9 @@
 #include "utils.h"
 
+char *malloc_addresses_g[MALLOC_ADDRESSES_SIZE];
+unsigned int malloc_size_to_be_allocated_g;
+unsigned int malloc_invoked_function_address_g;
+
 void set_flag(unsigned int *flags, unsigned int flag_value) {
    *flags |= flag_value;
 }
@@ -351,4 +355,39 @@ char *get_gson_element_value(char *json_string, char *json_element_to_find) {
    }
    *(returning_value + returning_value_length) = '\0';
    return returning_value;
+}
+
+char *debug_malloc(unsigned int size, unsigned int invoked_function_address) {
+   malloc_size_to_be_allocated_g = size;
+   malloc_invoked_function_address_g = invoked_function_address;
+   char *allocated_memory_location = malloc(size);
+   add_debug_malloc_address(allocated_memory_location);
+   return allocated_memory_location;
+}
+
+void debug_free(char *memory_location_to_free) {
+   free(memory_location_to_free);
+   remove_debug_malloc_address(memory_location_to_free);
+}
+
+void add_debug_malloc_address(char *allocated_memory_location) {
+   for (unsigned short i = 0; i < MALLOC_ADDRESSES_SIZE; i++) {
+      char *current_location = malloc_addresses_g[i];
+
+      if (current_location == NULL) {
+         malloc_addresses_g[i] = allocated_memory_location;
+         break;
+      }
+   }
+}
+
+void remove_debug_malloc_address(char *freed_memory_location) {
+   for (unsigned short i = 0; i < MALLOC_ADDRESSES_SIZE; i++) {
+      char *current_location = malloc_addresses_g[i];
+
+      if (current_location == freed_memory_location) {
+         malloc_addresses_g[i] = NULL;
+         break;
+      }
+   }
 }

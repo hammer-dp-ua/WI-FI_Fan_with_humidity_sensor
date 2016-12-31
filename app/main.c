@@ -23,7 +23,7 @@ volatile unsigned char esp8266_disabled_timer_g = TIMER14_5S;
 unsigned short checking_connection_status_and_server_availability_timer_g = TIMER14_60S;
 volatile unsigned short visible_network_list_timer_g = TIMER14_10MIN;;
 volatile unsigned char resets_occured_g;
-volatile unsigned short read_humidity_and_temperature_timer_g = TIMER14_5S;
+volatile unsigned short read_humidity_and_temperature_timer_g = TIMER14_10S;
 
 volatile unsigned short usart_overrun_errors_counter_g;
 volatile unsigned short usart_idle_line_detection_counter_g;
@@ -240,7 +240,7 @@ int main() {
          check_visible_network_list();
 
          if (!read_humidity_and_temperature_timer_g) {
-            read_humidity_and_temperature_timer_g = TIMER14_5S;
+            read_humidity_and_temperature_timer_g = TIMER14_10S;
             ADC_StartOfConversion(ADC1);
          }
          if (read_flag(&general_flags_g, SEND_FAN_INFO) && is_piped_tasks_scheduler_empty()) {
@@ -663,12 +663,16 @@ unsigned char handle_get_visible_network_list_task(unsigned int current_piped_ta
 }
 
 void get_server_avalability(unsigned int request_task) {
+   clear_piped_request_commands_to_send();
+
    char *request = generate_request(ESP8226_REQUEST_SEND_STATUS_INFO_AND_GET_SERVER_AVAILABILITY, STATUS_JSON, DEBUG_STATUS_JSON, NULL, NULL);
 
    prepare_http_request(ESP8226_SERVER_IP_ADDRESS, ESP8226_SERVER_PORT, request, NULL, request_task);
 }
 
 void send_fan_info(unsigned int request_task) {
+   clear_piped_request_commands_to_send();
+
    char *humidity = float_to_string(get_humidity(), 2);
    char *temperature = float_to_string(get_temperature(), 2);
    char *request = generate_request(ESP8226_REQUEST_SEND_FAN_INFO, STATUS_AND_FAN_DATA, DEBUG_STATUS_AND_FAN_DATA, humidity, temperature);
@@ -818,6 +822,8 @@ void set_default_wifi_mode() {
 }
 
 void prepare_http_request_without_parameters(char request_template[], unsigned int request_task) {
+   clear_piped_request_commands_to_send();
+
    char *parameters_for_request[] = {ESP8226_SERVER_IP_ADDRESS, NULL};
    char *request = set_string_parameters(request_template, parameters_for_request);
 
@@ -868,6 +874,7 @@ void resend_usart_get_request(unsigned int final_task) {
 void clear_piped_request_commands_to_send() {
    for (unsigned char i = 0; i < PIPED_REQUEST_COMMANDS_TO_SEND_SIZE; i++) {
       char *command = piped_request_commands_to_send_g[i];
+
       if (command != NULL) {
          free(command);
          piped_request_commands_to_send_g[i] = NULL;
@@ -1308,7 +1315,7 @@ void ADC_Config()
 
    GPIO_InitTypeDef gpioInitType;
    gpioInitType.GPIO_Pin = HUMIDITY_SENSOR_ADC_PIN;
-   gpioInitType.GPIO_PuPd = GPIO_PuPd_DOWN;
+   gpioInitType.GPIO_PuPd = GPIO_PuPd_NOPULL;
    gpioInitType.GPIO_Mode = GPIO_Mode_AN;
    gpioInitType.GPIO_Speed = GPIO_Speed_Level_1; // Low 2 MHz
    GPIO_Init(HUMIDITY_SENSOR_ADC_PORT, &gpioInitType);
