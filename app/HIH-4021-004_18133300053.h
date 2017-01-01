@@ -1,5 +1,6 @@
 // Slope: 30.029466mV/%RH
 // Sensor RH = (Vout - zero offset)/slope
+// Sensor RH = (Vout - .832883) / 0.030
 
 #define HIH_VOLTAGE 5.0f
 #define ADC_REF_VOLTAGE 3.3f
