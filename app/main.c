@@ -3,6 +3,7 @@
 #include "utils.h"
 #include "device_settings.h"
 #include "HIH-4021-004_18133300053.h"
+#include "MF52_10K.h"
 
 unsigned int piped_tasks_to_send_g[PIPED_TASKS_TO_SEND_SIZE];
 unsigned int piped_tasks_history_g[PIPED_TASKS_HISTORY_SIZE];
@@ -130,7 +131,7 @@ void USART1_IRQHandler() {
 
 int main() {
    RCC_APB2PeriphClockCmd(RCC_APB2Periph_DBGMCU, ENABLE);
-   IWDG_Config();
+   //IWDG_Config();
    Clock_Config();
    Pins_Config();
    disable_esp8266();
@@ -1371,14 +1372,14 @@ float get_humidity() {
 }
 
 float get_temperature() {
-   return 25.0;
+   return mf52_get_temperature(adc_dma_converted_data[1]);
 }
 
 float get_adc_voltage(ADCSource source) {
    if (source == HUMIDITY_SENSOR) {
-      return (float)(adc_dma_converted_data[0]) * ADC_REF_VOLTAGE / 4096.0f;
+      return (float) (adc_dma_converted_data[0]) * ADC_REF_VOLTAGE / 4096.0f;
    } else if (source == TEMPERATURE_SENSOR) {
-      return (float)(adc_dma_converted_data[1]) * ADC_REF_VOLTAGE / 4096.0f;
+      return (float) (adc_dma_converted_data[1]) * ADC_REF_VOLTAGE / 4096.0f;
    } else {
       return -1;
    }
