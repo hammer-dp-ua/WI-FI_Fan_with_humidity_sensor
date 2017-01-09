@@ -21,7 +21,7 @@
 #define USART1_TDR_ADDRESS (unsigned int)(&(USART1->TDR))
 #define ADC1_DMA_CHANNEL DMA1_Channel1
 #define ADC1_DR_ADDRESS (uint32_t)(&(ADC1->DR))
-#define TEMPERATURE_SENSOR_ADC_CHANNEL ADC_Channel_4 // See ADC pin
+#define TEMPERATURE_SENSOR_ADC_CHANNEL ADC_Channel_3 // See ADC pin
 #define HUMIDITY_SENSOR_ADC_CHANNEL ADC_Channel_7 // See ADC pin
 
 #define NETWORK_STATUS_LED_PIN GPIO_Pin_5
@@ -30,7 +30,7 @@
 #define SERVER_AVAILABILITI_LED_PORT GPIOA
 #define ESP8266_CONTROL_PIN GPIO_Pin_15
 #define ESP8266_CONTROL_PORT GPIOA
-#define TEMPERATURE_SENSOR_ADC_PIN GPIO_Pin_4
+#define TEMPERATURE_SENSOR_ADC_PIN GPIO_Pin_3
 #define TEMPERATURE_SENSOR_ADC_PORT GPIOA
 #define HUMIDITY_SENSOR_ADC_PIN GPIO_Pin_7
 #define HUMIDITY_SENSOR_ADC_PORT GPIOA
@@ -185,7 +185,7 @@ void delete_current_piped_task();
 void add_piped_task_to_send_into_tail(unsigned int task);
 void add_piped_task_to_send_into_head(unsigned int task);
 void delete_piped_task(unsigned int task);
-void on_successfully_receive_general_actions();
+void on_successfully_receive_general_actions(unsigned int sent_task);
 void prepare_http_request_without_parameters(char request_template[], unsigned int request_task);
 void prepare_http_request(char address[], char port[], char request[], void (*on_response)(), unsigned int request_task);
 void resend_usart_get_request_using_global_final_task();
@@ -210,7 +210,7 @@ unsigned int calculate_response_timestamp();
 void get_own_ip_address();
 void set_own_ip_address();
 void close_connection();
-void add_error();
+void add_error(unsigned int sent_task);
 void check_connection_status_and_server_availability();
 void check_visible_network_list();
 void add_piped_task_into_history(unsigned int task);

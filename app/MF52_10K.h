@@ -1,7 +1,7 @@
 float mf52_get_temperature(unsigned int adc_bits);
 
 #define MF52_10K_POWER_SUPPLY 3.3f
-#define MF52_R1_DIVIDER_RESISTOR 10000
+#define MF52_R1_DIVIDER_RESISTOR 10150
 #define MF52_ADC_RESOLUTION 4096
 
 #define MF52_RESISTOR_VALUE_AT_MINUS_30 181700
