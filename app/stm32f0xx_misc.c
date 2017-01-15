@@ -74,7 +74,7 @@
   *         the configuration information for the specified NVIC peripheral.
   * @retval None
   */
-/*void NVIC_Init(NVIC_InitTypeDef* NVIC_InitStruct)
+void NVIC_Init(NVIC_InitTypeDef* NVIC_InitStruct)
 {
   uint32_t tmppriority = 0x00;
   
@@ -99,7 +99,7 @@
     // Disable the Selected IRQ Channels -------------------------------------
     NVIC->ICER[0] = (uint32_t)0x01 << (NVIC_InitStruct->NVIC_IRQChannel & (uint8_t)0x1F);
   }
-}*/
+}
 
 /**
   * @brief  Selects the condition for the system to enter low power mode.

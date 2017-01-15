@@ -5,7 +5,7 @@
 
 void set_flag(unsigned int *flags, unsigned int flag_value);
 void reset_flag(unsigned int *flags, unsigned int flag_value);
-unsigned char read_flag(unsigned int *flags, unsigned int flag_value);
+unsigned char read_flag(unsigned int flags, unsigned int flag_value);
 unsigned char contains_string(char being_compared_string[], char string_to_be_contained[]);
 void *set_string_parameters(char string[], char *parameters[]);
 unsigned short get_string_length(char string[]);

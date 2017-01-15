@@ -125,7 +125,7 @@
   *         contains the configuration information for the EXTI peripheral.
   * @retval None
   */
-/*void EXTI_Init(EXTI_InitTypeDef* EXTI_InitStruct)
+void EXTI_Init(EXTI_InitTypeDef* EXTI_InitStruct)
 {
   uint32_t tmp = 0;
 
@@ -173,7 +173,7 @@
     // Disable the selected external lines 
     *(__IO uint32_t *) tmp &= ~EXTI_InitStruct->EXTI_Line;
   }
-}*/
+}
 
 /**
   * @brief  Fills each EXTI_InitStruct member with its reset value.
@@ -263,7 +263,7 @@
   *          This parameter can be EXTI_Linex where x can be (0..27).
   * @retval The new state of EXTI_Line (SET or RESET).
   */
-/*ITStatus EXTI_GetITStatus(uint32_t EXTI_Line)
+ITStatus EXTI_GetITStatus(uint32_t EXTI_Line)
 {
   ITStatus bitstatus = RESET;
 
@@ -279,7 +279,7 @@
     bitstatus = RESET;
   }
   return bitstatus;
-}*/
+}
 
 /**
   * @brief  Clears the EXTI's line pending bits.
@@ -287,13 +287,13 @@
   *          This parameter can be any combination of EXTI_Linex where x can be (0..27).
   * @retval None
   */
-/*void EXTI_ClearITPendingBit(uint32_t EXTI_Line)
+void EXTI_ClearITPendingBit(uint32_t EXTI_Line)
 {
   // Check the parameters 
   assert_param(IS_EXTI_LINE(EXTI_Line));
 
   EXTI->PR = EXTI_Line;
-}*/
+}
 
 /**
   * @}

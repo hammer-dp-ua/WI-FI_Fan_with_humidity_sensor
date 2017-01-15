@@ -12,8 +12,8 @@ void reset_flag(unsigned int *flags, unsigned int flag_value) {
    *flags &= ~(*flags & flag_value);
 }
 
-unsigned char read_flag(unsigned int *flags, unsigned int flag_value) {
-   return (*flags & flag_value) > 0 ? 1 : 0;
+unsigned char read_flag(unsigned int flags, unsigned int flag_value) {
+   return (flags & flag_value) > 0 ? 1 : 0;
 }
 
 unsigned char contains_string(char being_compared_string[], char string_to_be_contained[]) {

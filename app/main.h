@@ -34,6 +34,14 @@
 #define TEMPERATURE_SENSOR_ADC_PORT GPIOA
 #define HUMIDITY_SENSOR_ADC_PIN GPIO_Pin_7
 #define HUMIDITY_SENSOR_ADC_PORT GPIOA
+#define FAN_SWITCH_PIN GPIO_Pin_4
+#define FAN_SWITCH_PORT GPIOA
+#define FAN_SWITCH_EXTI_PIN_SOURCE EXTI_PinSource4
+#define FAN_SWITCH_EXTI_PORT_SOURCE EXTI_PortSourceGPIOA
+#define FAN_SWITCH_EXTI_LINE EXTI_Line4
+#define FAN_SWITCH_NVIC_IRQChannel EXTI4_15_IRQn
+#define FAN_RELAY_PIN GPIO_Pin_1
+#define FAN_RELAY_PORT GPIOB
 
 // General flags
 #define USART_DATA_RECEIVED_FLAG 1
@@ -41,7 +49,8 @@
 #define SUCCESSUFULLY_CONNECTED_TO_NETWORK_FLAG 4
 #define SEND_DEBUG_INFO_FLAG 8
 #define TURN_FAN_ON_FLAG 16
-#define SEND_FAN_INFO 32
+#define SEND_FAN_INFO_FLAG 32
+#define FAN_SWITCH_CHANGED_STATE_FLAG 64
 
 #define GET_VISIBLE_NETWORK_LIST_TASK 1
 #define DISABLE_ECHO_TASK 2
@@ -140,30 +149,32 @@ char STATUS_AND_FAN_DATA[] __attribute__ ((section(".text.const"))) = "{\"gain\"
 
 void IWDG_Config();
 void Clock_Config();
+void init_pin_as_output(GPIO_TypeDef* GPIOx, unsigned int pin);
 void Pins_Config();
 void TIMER3_Confing();
 void TIMER14_Confing();
 void ADC_Config();
-unsigned char handle_disable_echo_task(unsigned int current_piped_task_to_send, unsigned int *sent_flag);
-unsigned char handle_get_connection_status_and_connect_task(unsigned int current_piped_task_to_send, unsigned int *sent_flag);
-unsigned char handle_get_connection_status_task(unsigned int current_piped_task_to_send, unsigned int *sent_flag);
-unsigned char handle_connect_to_network_task(unsigned int current_piped_task_to_send, unsigned int *sent_flag);
-unsigned char handle_connect_to_server_task(unsigned int current_piped_task_to_send, unsigned int *sent_flag);
-unsigned char handle_set_bytes_to_send_in_request_task(unsigned int current_piped_task_to_send, unsigned int *sent_flag);
-unsigned char handle_get_request_sent_and_response_received_task(unsigned int current_piped_task_to_send, unsigned int *sent_flag);
-unsigned char handle_get_current_default_wifi_mode_task(unsigned int current_piped_task_to_send, unsigned int *sent_flag);
-unsigned char handle_set_default_station_wifi_mode_task(unsigned int current_piped_task_to_send, unsigned int *sent_flag);
-unsigned char handle_get_own_ip_address_task(unsigned int current_piped_task_to_send, unsigned int *sent_flag);
-unsigned char handle_set_own_ip_address_task(unsigned int current_piped_task_to_send, unsigned int *sent_flag);
-unsigned char handle_close_connection_task(unsigned int current_piped_task_to_send, unsigned int *sent_flag);
-unsigned char handle_get_visible_network_list_task(unsigned int current_piped_task_to_send, unsigned int *sent_task);
+unsigned char handle_disable_echo_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
+unsigned char handle_get_connection_status_and_connect_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
+unsigned char handle_get_connection_status_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
+unsigned char handle_connect_to_network_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
+unsigned char handle_connect_to_server_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
+unsigned char handle_set_bytes_to_send_in_request_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
+unsigned char handle_get_request_sent_and_response_received_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
+unsigned char handle_get_current_default_wifi_mode_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
+unsigned char handle_set_default_station_wifi_mode_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
+unsigned char handle_get_own_ip_address_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
+unsigned char handle_set_own_ip_address_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
+unsigned char handle_close_connection_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
+unsigned char handle_get_visible_network_list_task(unsigned int current_piped_task_to_send, unsigned int sent_task);
 unsigned char handle_get_server_availability_task(unsigned int current_piped_task_to_send);
-unsigned char handle_get_server_availability_request_task(unsigned int current_piped_task_to_send, unsigned int *sent_task);
+unsigned char handle_get_server_availability_request_task(unsigned int current_piped_task_to_send, unsigned int sent_task);
 unsigned char handle_send_fan_info_task(unsigned int current_piped_task_to_send);
-unsigned char handle_send_fan_info_request_task(unsigned int current_piped_task_to_send, unsigned int *sent_task);
+unsigned char handle_send_fan_info_request_task(unsigned int current_piped_task_to_send, unsigned int sent_task);
 void reset_device_state();
 void DMA_Config();
 void USART_Config();
+void EXTERNAL_Interrupt_Config();
 void disable_echo();
 void get_network_list();
 void connect_to_network();
