@@ -1,5 +1,7 @@
 #include "utils.h"
 
+static float get_integer_or_float_part(char *float_string, unsigned char *start_index);
+
 char *malloc_addresses_g[MALLOC_ADDRESSES_SIZE];
 unsigned int malloc_size_to_be_allocated_g;
 unsigned int malloc_invoked_function_address_g;
@@ -388,6 +390,70 @@ void remove_debug_malloc_address(char *freed_memory_location) {
       if (current_location == freed_memory_location) {
          malloc_addresses_g[i] = NULL;
          break;
+      }
+   }
+}
+
+float my_atoff(char *float_string) {
+   if (float_string == NULL) {
+      return -1.0f;
+   }
+
+   unsigned char float_string_index = 0;
+   float integer_part = get_integer_or_float_part(float_string, &float_string_index);
+   float float_part = 0.0f;
+
+   if (float_string[float_string_index] == '.') {
+      float_string_index++;
+      float_part = get_integer_or_float_part(float_string, &float_string_index);
+
+      if (float_part == -1.0f) {
+         return -1.0f;
+      }
+   }
+
+   if (integer_part < 0.0f) {
+      return integer_part - float_part;
+   } else {
+      return integer_part + float_part;
+   }
+}
+
+static float get_integer_or_float_part(char *float_string, unsigned char *start_index) {
+   unsigned char is_float_part = *start_index > 0 ? 1 : 0;
+   unsigned char negative_digit = 0;
+   unsigned int integer_part = 1; // 1 is to be removed later
+   unsigned int tenth = 1;
+   char current_character = float_string[*start_index];
+
+   if (!is_float_part && current_character == '-') {
+      negative_digit = 1;
+      *start_index = *start_index + 1;
+      current_character = float_string[*start_index];
+   }
+
+   while (current_character != '\0' && current_character != '.') {
+      if (current_character < '0' || current_character > '9') {
+         return -1.0f;
+      }
+
+      integer_part = integer_part * 10 + (current_character - '0');
+      *start_index = *start_index + 1;
+      tenth *= 10;
+      current_character = float_string[*start_index];
+   }
+
+   if (is_float_part) {
+      float float_part = (float)integer_part / (float)tenth;
+      if (float_part >= 1.0f) {
+         float_part -= 1.0f;
+      }
+      return float_part;
+   } else {
+      if (negative_digit) {
+         return -(float)(integer_part - tenth);
+      } else {
+         return (float)(integer_part - tenth);
       }
    }
 }

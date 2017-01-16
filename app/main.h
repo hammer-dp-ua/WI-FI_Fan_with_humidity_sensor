@@ -40,7 +40,7 @@
 #define FAN_SWITCH_EXTI_PORT_SOURCE EXTI_PortSourceGPIOA
 #define FAN_SWITCH_EXTI_LINE EXTI_Line4
 #define FAN_SWITCH_NVIC_IRQChannel EXTI4_15_IRQn
-#define FAN_RELAY_PIN GPIO_Pin_1
+#define FAN_RELAY_PIN GPIO_Pin_7
 #define FAN_RELAY_PORT GPIOB
 
 // General flags
@@ -77,6 +77,8 @@
 #define PIPED_REQUEST_CIPSTART_COMMAND_INDEX 0
 #define PIPED_REQUEST_CIPSEND_COMMAND_INDEX 1
 #define PIPED_REQUEST_INDEX 2
+
+#define MANUALLY_SWITCHED_FAN_TIMEOUT_DEFAULT_SETUP (20 * TIMER14_60S)
 
 #define PIPED_TASKS_TO_SEND_SIZE 30
 #define PIPED_TASKS_HISTORY_SIZE 10
@@ -138,6 +140,7 @@ char ESP8226_RESPONSE_OK_STATUS_CODE[] __attribute__ ((section(".text.const"))) 
 char ESP8226_RESPONSE_HTTP_STATUS_400_BAD_REQUEST[] __attribute__ ((section(".text.const"))) = "HTTP/1.1 400 Bad Request";
 char SERVER_STATUS_INCLUDE_DEBUG_INFO[] __attribute__ ((section(".text.const"))) = "\"includeDebugInfo\":true";
 char TURN_FAN_ON[] __attribute__ ((section(".text.const"))) = "\"turnOn\":true";
+char MANUALLY_TURNED_ON_TIMEOUT[] __attribute__ ((section(".text.const"))) = "manuallyTurnedOnTimeout";
 char RESPONSE_CLOSED_BY_TOMCAT[] __attribute__ ((section(".text.const"))) = "\r\n+IPD,5:0\r\n\r\nCLOSED\r\n";
 char ESP8226_REQUEST_SEND_STATUS_INFO_AND_GET_SERVER_AVAILABILITY[] __attribute__ ((section(".text.const"))) =
       "POST /server/esp8266/statusInfo HTTP/1.1\r\nContent-Length: <1>\r\nHost: <2>\r\nUser-Agent: ESP8266\r\nContent-Type: application/json\r\nAccept: application/json\r\nConnection: keep-alive\r\n\r\n<3>\r\n";
@@ -149,11 +152,11 @@ char STATUS_AND_FAN_DATA[] __attribute__ ((section(".text.const"))) = "{\"gain\"
 
 void IWDG_Config();
 void Clock_Config();
-void init_pin_as_output(GPIO_TypeDef* GPIOx, unsigned int pin);
 void Pins_Config();
 void TIMER3_Confing();
 void TIMER14_Confing();
 void ADC_Config();
+void init_pin_as_output(GPIO_TypeDef* GPIOx, unsigned int pin);
 unsigned char handle_disable_echo_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
 unsigned char handle_get_connection_status_and_connect_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
 unsigned char handle_get_connection_status_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);

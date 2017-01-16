@@ -26,6 +26,10 @@ volatile unsigned short visible_network_list_timer_g = TIMER14_10MIN;;
 volatile unsigned char resets_occured_g;
 volatile unsigned short read_humidity_and_temperature_timer_g = TIMER14_10S;
 volatile unsigned short get_fan_switch_state_timer_g;
+volatile unsigned int manually_switched_fan_timeout_setup_g = MANUALLY_SWITCHED_FAN_TIMEOUT_DEFAULT_SETUP;
+volatile unsigned int manually_switched_fan_timeout_g;
+float last_sent_temperature_g;
+float last_sent_humidity_g;
 
 volatile unsigned short usart_overrun_errors_counter_g;
 volatile unsigned short usart_idle_line_detection_counter_g;
@@ -74,6 +78,12 @@ void TIM14_IRQHandler() {
    if (read_humidity_and_temperature_timer_g) {
       read_humidity_and_temperature_timer_g--;
    }
+   if (manually_switched_fan_timeout_g) {
+      manually_switched_fan_timeout_g--;
+   }
+   if (get_fan_switch_state_timer_g) {
+      get_fan_switch_state_timer_g--;
+   }
 }
 
 void TIM3_IRQHandler() {
@@ -87,9 +97,6 @@ void TIM3_IRQHandler() {
    if (send_usart_data_function_g != NULL) {
       send_usart_data_time_counter_g++;
    }
-   if (get_fan_switch_state_timer_g) {
-      get_fan_switch_state_timer_g--;
-   }
    network_searching_status_led_counter_g++;
 }
 
@@ -101,7 +108,7 @@ void EXTI4_15_IRQHandler() {
       EXTI_ClearITPendingBit(FAN_SWITCH_EXTI_LINE);
 
       set_flag(&general_flags_g, FAN_SWITCH_CHANGED_STATE_FLAG);
-      get_fan_switch_state_timer_g = TIMER3_100MS;
+      get_fan_switch_state_timer_g = TIMER14_1S;
    }
 }
 
@@ -144,6 +151,7 @@ int main() {
    IWDG_Config();
    Clock_Config();
    Pins_Config();
+   EXTERNAL_Interrupt_Config();
    disable_esp8266();
    DMA_Config();
    ADC_Config();
@@ -255,18 +263,42 @@ int main() {
             ADC_StartOfConversion(ADC1);
          }
          if (read_flag(general_flags_g, SEND_FAN_INFO_FLAG) && is_piped_tasks_scheduler_empty()) {
-            add_piped_task_to_send_into_tail(SEND_FAN_INFO_TASK);
             reset_flag(&general_flags_g, SEND_FAN_INFO_FLAG);
+
+            unsigned char delta_accepted = 0;
+            float current_humidity = get_humidity();
+            float humidity_delta = current_humidity - last_sent_humidity_g;
+
+            if (humidity_delta > 2.0f || humidity_delta < -2.0f) {
+               delta_accepted = 1;
+            }
+            if (!delta_accepted) {
+               float current_temperature = get_temperature();
+               float temperature_delta = current_temperature - last_sent_temperature_g;
+
+               if (temperature_delta > 0.5f || temperature_delta < -0.5f) {
+                  delta_accepted = 1;
+               }
+            }
+
+            if (delta_accepted) {
+               add_piped_task_to_send_into_tail(SEND_FAN_INFO_TASK);
+            }
          }
 
          if (read_flag(general_flags_g, FAN_SWITCH_CHANGED_STATE_FLAG) && !get_fan_switch_state_timer_g) {
             reset_flag(&general_flags_g, FAN_SWITCH_CHANGED_STATE_FLAG);
 
-            if (GPIO_ReadOutputDataBit(FAN_RELAY_PORT, GPIO_Pin_1)) {
-               GPIO_WriteBit(FAN_RELAY_PORT, FAN_RELAY_PIN, Bit_RESET);
+            if (GPIO_ReadOutputDataBit(FAN_RELAY_PORT, FAN_RELAY_PIN)) {
+               manually_switched_fan_timeout_g = 0;
             } else {
-               GPIO_WriteBit(FAN_RELAY_PORT, FAN_RELAY_PIN, Bit_SET);
+               manually_switched_fan_timeout_g = manually_switched_fan_timeout_setup_g;
             }
+         }
+         if (manually_switched_fan_timeout_g || read_flag(general_flags_g, TURN_FAN_ON_FLAG)) {
+            GPIO_WriteBit(FAN_RELAY_PORT, FAN_RELAY_PIN, Bit_SET);
+         } else {
+            GPIO_WriteBit(FAN_RELAY_PORT, FAN_RELAY_PIN, Bit_RESET);
          }
 
          // LED blinking
@@ -629,6 +661,8 @@ unsigned char handle_send_fan_info_request_task(unsigned int current_piped_task_
       } else {
          if (is_usart_response_contains_element(ESP8226_RESPONSE_OK_STATUS_CODE)) {
             on_successfully_receive_general_actions(SEND_FAN_INFO_REQUEST_TASK);
+            last_sent_humidity_g = get_humidity();
+            last_sent_temperature_g = get_temperature();
 
             if (is_usart_response_contains_element(SERVER_STATUS_INCLUDE_DEBUG_INFO)) {
                set_flag(&general_flags_g, SEND_DEBUG_INFO_FLAG);
@@ -640,6 +674,15 @@ unsigned char handle_send_fan_info_request_task(unsigned int current_piped_task_
                set_flag(&general_flags_g, TURN_FAN_ON_FLAG);
             } else {
                reset_flag(&general_flags_g, TURN_FAN_ON_FLAG);
+            }
+
+            char *manually_turned_on_timeout_string = get_gson_element_value(usart_data_received_buffer_g, MANUALLY_TURNED_ON_TIMEOUT);
+            if (manually_turned_on_timeout_string != NULL) {
+               int manually_turned_on_timeout = atoi(manually_turned_on_timeout_string);
+               free(manually_turned_on_timeout_string);
+               manually_switched_fan_timeout_setup_g = manually_turned_on_timeout * TIMER14_60S;
+            } else {
+               manually_switched_fan_timeout_setup_g = MANUALLY_SWITCHED_FAN_TIMEOUT_DEFAULT_SETUP;
             }
          } else {
             add_error(SEND_FAN_INFO_REQUEST_TASK);
@@ -1162,16 +1205,6 @@ void Clock_Config() {
    RCC_SYSCLKConfig(RCC_SYSCLKSource_PLLCLK);
 }
 
-void init_pin_as_output(GPIO_TypeDef* GPIOx, unsigned int pin) {
-   GPIO_InitTypeDef GPIO_InitType;
-   GPIO_InitType.GPIO_Pin = pin;
-   GPIO_InitType.GPIO_Mode = GPIO_Mode_OUT;
-   GPIO_InitType.GPIO_Speed = GPIO_Speed_Level_1;
-   GPIO_InitType.GPIO_PuPd = GPIO_PuPd_NOPULL;
-   GPIO_InitType.GPIO_OType = GPIO_OType_PP;
-   GPIO_Init(GPIOx, &GPIO_InitType);
-}
-
 void Pins_Config() {
    // Connect BOOT0 directly to ground, RESET to VDD with a resistor
 
@@ -1203,6 +1236,12 @@ void Pins_Config() {
    init_pin_as_output(SERVER_AVAILABILITI_LED_PORT, SERVER_AVAILABILITI_LED_PIN);
    init_pin_as_output(ESP8266_CONTROL_PORT, ESP8266_CONTROL_PIN);
    init_pin_as_output(FAN_RELAY_PORT, FAN_RELAY_PIN);
+
+   GPIO_InitTypeDef fan_switch_pin_config;
+   fan_switch_pin_config.GPIO_Pin = FAN_SWITCH_PIN;
+   fan_switch_pin_config.GPIO_Mode = GPIO_Mode_IN;
+   fan_switch_pin_config.GPIO_PuPd = GPIO_PuPd_NOPULL;
+   GPIO_Init(FAN_SWITCH_PORT, &fan_switch_pin_config);
 }
 
 /**
@@ -1369,6 +1408,16 @@ void ADC_Config()
 
    ADC_Cmd(ADC1, ENABLE);
    while(!ADC_GetFlagStatus(ADC1, ADC_FLAG_ADEN));
+}
+
+void init_pin_as_output(GPIO_TypeDef* GPIOx, unsigned int pin) {
+   GPIO_InitTypeDef GPIO_InitType;
+   GPIO_InitType.GPIO_Pin = pin;
+   GPIO_InitType.GPIO_Mode = GPIO_Mode_OUT;
+   GPIO_InitType.GPIO_Speed = GPIO_Speed_Level_1;
+   GPIO_InitType.GPIO_PuPd = GPIO_PuPd_NOPULL;
+   GPIO_InitType.GPIO_OType = GPIO_OType_PP;
+   GPIO_Init(GPIOx, &GPIO_InitType);
 }
 
 void send_usard_data(char *string) {

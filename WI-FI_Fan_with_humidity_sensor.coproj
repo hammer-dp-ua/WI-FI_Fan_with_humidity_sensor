@@ -4,7 +4,7 @@
     <Device manufacturerId="9" manufacturerName="ST" chipId="304" chipName="STM32F030C6T6" boardId="" boardName="" coreId="1" coreName="Cortex M0"/>
     <BuildOption>
       <Compile>
-        <Option name="OptimizationLevel" value="4"/>
+        <Option name="OptimizationLevel" value="6"/>
         <Option name="UseFPU" value="0"/>
         <Option name="UserEditCompiler" value=";;;;;;;"/>
         <Option name="SupportCPlusplus" value="0"/>

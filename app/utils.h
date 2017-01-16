@@ -21,3 +21,4 @@ char *debug_malloc(unsigned int size, unsigned int invoked_function);
 void debug_free(char *memory_location_to_free);
 void add_debug_malloc_address(char *allocated_memory_location);
 void remove_debug_malloc_address(char *freed_memory_location);
+float my_atoff(char *float_string);
