@@ -30,6 +30,7 @@ volatile unsigned int manually_switched_fan_timeout_setup_g = MANUALLY_SWITCHED_
 volatile unsigned int manually_switched_fan_timeout_g;
 float last_sent_temperature_g;
 float last_sent_humidity_g;
+unsigned char last_fan_switch_state_g;
 
 volatile unsigned short usart_overrun_errors_counter_g;
 volatile unsigned short usart_idle_line_detection_counter_g;
@@ -166,6 +167,8 @@ int main() {
    add_piped_task_to_send_into_tail(GET_VISIBLE_NETWORK_LIST_TASK);
    add_piped_task_to_send_into_tail(GET_SERVER_AVAILABILITY_TASK);
 
+   last_fan_switch_state_g = GPIO_ReadInputDataBit(FAN_SWITCH_PORT, FAN_SWITCH_PIN);
+
    while (1) {
       if (is_esp8266_enabled(1)) {
          // Seconds
@@ -289,13 +292,22 @@ int main() {
          if (read_flag(general_flags_g, FAN_SWITCH_CHANGED_STATE_FLAG) && !get_fan_switch_state_timer_g) {
             reset_flag(&general_flags_g, FAN_SWITCH_CHANGED_STATE_FLAG);
 
-            if (GPIO_ReadInputDataBit(FAN_SWITCH_PORT, FAN_SWITCH_PIN)) {
-               manually_switched_fan_timeout_g = manually_switched_fan_timeout_setup_g;
-            } else {
-               manually_switched_fan_timeout_g = 0;
+            unsigned char current_fan_switch_state = GPIO_ReadInputDataBit(FAN_SWITCH_PORT, FAN_SWITCH_PIN);
+
+            if (current_fan_switch_state != last_fan_switch_state_g) {
+               if (GPIO_ReadOutputDataBit(FAN_RELAY_PORT, FAN_RELAY_PIN)) {
+                  manually_switched_fan_timeout_g = 0;
+               } else {
+                  manually_switched_fan_timeout_g = manually_switched_fan_timeout_setup_g;
+               }
             }
+
+            last_fan_switch_state_g = current_fan_switch_state;
          }
-         if (manually_switched_fan_timeout_g || read_flag(general_flags_g, TURN_FAN_ON_FLAG)) {
+         if (read_flag(general_flags_g, TURN_FAN_ON_FLAG)) {
+            GPIO_WriteBit(FAN_RELAY_PORT, FAN_RELAY_PIN, Bit_SET);
+            manually_switched_fan_timeout_g = 0;
+         } else if (manually_switched_fan_timeout_g) {
             GPIO_WriteBit(FAN_RELAY_PORT, FAN_RELAY_PIN, Bit_SET);
          } else {
             GPIO_WriteBit(FAN_RELAY_PORT, FAN_RELAY_PIN, Bit_RESET);
@@ -1280,7 +1292,7 @@ void TIMER14_Confing() {
    TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
    TIM_TimeBaseStructure.TIM_Period = TIMER14_PERIOD;
    TIM_TimeBaseStructure.TIM_Prescaler = TIMER14_PRESCALER;
-   TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV2;
+   TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
    TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
    TIM_TimeBaseInit(TIM14, &TIM_TimeBaseStructure);
 
