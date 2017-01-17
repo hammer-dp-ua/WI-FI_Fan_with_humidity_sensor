@@ -25,7 +25,7 @@
 </editorArea>
 <editor activePart="true" focus="true" id="org.eclipse.cdt.ui.editor.CEditor" name="main.c" partName="main.c" path="D:/USER/CoIDE/workspace/WI-FI_Fan_with_humidity_sensor/app/main.c" title="main.c" tooltip="D:/USER/CoIDE/workspace/WI-FI_Fan_with_humidity_sensor/app/main.c" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/WI-FI_Fan_with_humidity_sensor/main.c"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="49561" selectionTopPixel="22876"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="18636" selectionTopPixel="7942"/>
 </editor>
 <editor id="org.eclipse.cdt.ui.editor.CEditor" name="MF52_10K.c" partName="MF52_10K.c" path="D:/USER/CoIDE/workspace/WI-FI_Fan_with_humidity_sensor/app/MF52_10K.c" title="MF52_10K.c" tooltip="D:/USER/CoIDE/workspace/WI-FI_Fan_with_humidity_sensor/app/MF52_10K.c" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/WI-FI_Fan_with_humidity_sensor/MF52_10K.c"/>
@@ -33,7 +33,7 @@
 </editor>
 <editor id="org.eclipse.cdt.ui.editor.CEditor" name="main.h" partName="main.h" path="D:/USER/CoIDE/workspace/WI-FI_Fan_with_humidity_sensor/app/main.h" title="main.h" tooltip="D:/USER/CoIDE/workspace/WI-FI_Fan_with_humidity_sensor/app/main.h" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/WI-FI_Fan_with_humidity_sensor/main.h"/>
-<editorState selectionHorizontalPixel="0" selectionLength="15" selectionOffset="1436" selectionTopPixel="57"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="2001" selectionTopPixel="3198"/>
 </editor>
 <editor id="org.eclipse.cdt.ui.editor.CEditor" name="MF52_10K.h" partName="MF52_10K.h" path="D:/USER/CoIDE/workspace/WI-FI_Fan_with_humidity_sensor/app/MF52_10K.h" title="MF52_10K.h" tooltip="D:/USER/CoIDE/workspace/WI-FI_Fan_with_humidity_sensor/app/MF52_10K.h" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/WI-FI_Fan_with_humidity_sensor/MF52_10K.h"/>
@@ -47,19 +47,23 @@
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/WI-FI_Fan_with_humidity_sensor/utils.h"/>
 <editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="1262" selectionTopPixel="0"/>
 </editor>
-<editor id="org.eclipse.cdt.ui.editor.asm.AsmEditor" name="startup_stm32f0xx.s" partName="startup_stm32f0xx.s" path="D:/USER/CoIDE/workspace/WI-FI_Fan_with_humidity_sensor/components/startup_stm32f0xx.s" title="startup_stm32f0xx.s" tooltip="D:/USER/CoIDE/workspace/WI-FI_Fan_with_humidity_sensor/components/startup_stm32f0xx.s" workbook="DefaultEditorWorkbook">
-<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/WI-FI_Fan_with_humidity_sensor/components/startup_stm32f0xx.s"/>
-<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="0" selectionTopPixel="0"/>
-</editor>
 <editor id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f0xx_gpio.h" partName="stm32f0xx_gpio.h" path="D:/USER/CoIDE/workspace/WI-FI_Fan_with_humidity_sensor/components/stm32f0xx_gpio.h" title="stm32f0xx_gpio.h" tooltip="D:/USER/CoIDE/workspace/WI-FI_Fan_with_humidity_sensor/components/stm32f0xx_gpio.h" workbook="DefaultEditorWorkbook">
 <input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/WI-FI_Fan_with_humidity_sensor/components/stm32f0xx_gpio.h"/>
 <editorState selectionHorizontalPixel="0" selectionLength="14" selectionOffset="3607" selectionTopPixel="1843"/>
+</editor>
+<editor id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f0xx_gpio.c" partName="stm32f0xx_gpio.c" path="D:/USER/CoIDE/workspace/WI-FI_Fan_with_humidity_sensor/app/stm32f0xx_gpio.c" title="stm32f0xx_gpio.c" tooltip="D:/USER/CoIDE/workspace/WI-FI_Fan_with_humidity_sensor/app/stm32f0xx_gpio.c" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/WI-FI_Fan_with_humidity_sensor/stm32f0xx_gpio.c"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="11664" selectionTopPixel="5282"/>
+</editor>
+<editor id="org.eclipse.cdt.ui.editor.asm.AsmEditor" name="startup_stm32f0xx.s" partName="startup_stm32f0xx.s" path="D:/USER/CoIDE/workspace/WI-FI_Fan_with_humidity_sensor/components/startup_stm32f0xx.s" title="startup_stm32f0xx.s" tooltip="D:/USER/CoIDE/workspace/WI-FI_Fan_with_humidity_sensor/components/startup_stm32f0xx.s" workbook="DefaultEditorWorkbook">
+<input factoryID="org.eclipse.ui.part.FileEditorInputFactory" path="/WI-FI_Fan_with_humidity_sensor/components/startup_stm32f0xx.s"/>
+<editorState selectionHorizontalPixel="0" selectionLength="0" selectionOffset="0" selectionTopPixel="0"/>
 </editor>
 </editors>
 <views>
 <view id="org.eclipse.debug.ui.ExpressionView" partName="Expressions">
 <viewState>
-<ExpressionKeySet ExpKeys="humidity_delta,temperature_delta,"/>
+<ExpressionKeySet ExpKeys="piped_tasks_to_send_g,"/>
 </viewState>
 </view>
 <view id="org.eclipse.ui.views.ProgressView" partName="Progress">
@@ -72,7 +76,7 @@
 <element path="/WI-FI_Fan_with_humidity_sensor/components"/>
 </expanded>
 <selection>
-<element path="/WI-FI_Fan_with_humidity_sensor/utils.c"/>
+<element path="/WI-FI_Fan_with_humidity_sensor/stm32f0xx_gpio.c"/>
 </selection>
 </viewState>
 </view>
@@ -120,8 +124,8 @@
 <hide_menu_item_id id="org.coocox.codebugger.configuration.showMemoryBrowserAction"/>
 <hide_menu_item_id id="org.coocox.codebugger.configuration.showVariablesAction"/>
 <hide_menu_item_id id="org.coocox.builder.ui.openProjectExplorerAction"/>
-<hide_menu_item_id id="org.eclipse.debug.ui.commands.TerminateAndRelaunch"/>
 <hide_menu_item_id id="org.coocox.codebugger.trace.actions.ShowTraceControlAction"/>
+<hide_menu_item_id id="org.eclipse.debug.ui.commands.TerminateAndRelaunch"/>
 <hide_menu_item_id id="org.coocox.codebugger.configuration.showRegistersAction"/>
 <hide_toolbar_item_id id="org.eclipse.cdt.debug.internal.ui.actions.ToggleInstructionStepModeAction"/>
 <hide_toolbar_item_id id="org.eclipse.ui.edit.text.toggleShowSelectedElementOnly"/>
@@ -233,8 +237,8 @@
 <hide_toolbar_item_id id="org.eclipse.ui.edit.text.toggleShowSelectedElementOnly"/>
 <hide_toolbar_item_id id="org.coocox.builder.ui.build"/>
 <hide_toolbar_item_id id="org.coocox.welcome.ui.action.welcome"/>
-<hide_toolbar_item_id id="org.coocox.component.ui.ShowRepositoryAction"/>
 <hide_toolbar_item_id id="org.coocox.codebugger.configuration.coideProgramDownloadAction"/>
+<hide_toolbar_item_id id="org.coocox.component.ui.ShowRepositoryAction"/>
 <view id="org.coocox.coassistant.view.CoAssistantView_debug"/>
 <view id="org.eclipse.debug.ui.ExpressionView"/>
 <view id="org.eclipse.debug.ui.VariableView"/>
@@ -290,8 +294,8 @@
 <presentation id="org.eclipse.ui.presentations.WorkbenchPresentationFactory"/>
 </folder>
 </info>
-<info folder="true" part="org.eclipse.ui.internal.ViewStack@1916de5" ratio="0.6057386" ratioLeft="1140" ratioRight="742" relationship="2" relative="org.eclipse.ui.internal.ViewStack@c5d83e">
-<folder activePageID="org.eclipse.cdt.dsf.debug.ui.disassembly.view" appearance="2" expanded="2">
+<info folder="true" part="org.eclipse.ui.internal.ViewStack@1916de5" ratio="0.6466525" ratioLeft="1217" ratioRight="665" relationship="2" relative="org.eclipse.ui.internal.ViewStack@c5d83e">
+<folder activePageID="org.eclipse.debug.ui.ExpressionView" appearance="2" expanded="2">
 <page content="org.coocox.coassistant.view.CoAssistantView_debug" label="Peripherals"/>
 <page content="org.eclipse.debug.ui.ExpressionView" label="Expressions"/>
 <page content="org.eclipse.debug.ui.VariableView" label="Variables"/>
@@ -317,156 +321,160 @@
 <navigationHistory>
 <editors>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/WI-FI_Fan_with_humidity_sensor/main.c"/>
-<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/WI-FI_Fan_with_humidity_sensor/utils.c"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/WI-FI_Fan_with_humidity_sensor/stm32f0xx_gpio.c"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/WI-FI_Fan_with_humidity_sensor/main.h"/>
+<editor factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory" id="org.coocox.welcome.ui.WelcomePage">
+<org.coocox.welcome.ui.WelcomePage/>
+</editor>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" path="/WI-FI_Fan_with_humidity_sensor/components/startup_stm32f0xx.s"/>
 <editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/WI-FI_Fan_with_humidity_sensor/main.h"/>
+<editor factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" path="/WI-FI_Fan_with_humidity_sensor/main.h"/>
 </editors>
-<item historyLabel="utils.c" index="1">
-<position info="not_deleted" x="14217" y="0"/>
-</item>
-<item historyLabel="utils.c" index="1">
-<position info="not_deleted" x="12849" y="0"/>
+<item historyLabel="stm32f0xx_gpio.c" index="1">
+<position info="not_deleted" x="11664" y="0"/>
 </item>
 <item historyLabel="main.c" index="0">
-<position info="not_deleted" x="5325" y="0"/>
+<position info="not_deleted" x="11762" y="21"/>
 </item>
 <item historyLabel="main.c" index="0">
-<position info="not_deleted" x="5313" y="0"/>
+<position info="not_deleted" x="11998" y="0"/>
 </item>
 <item historyLabel="main.c" index="0">
-<position/>
+<position info="not_deleted" x="1401" y="37"/>
 </item>
 <item historyLabel="main.c" index="0">
-<position/>
+<position info="not_deleted" x="11647" y="0"/>
 </item>
 <item historyLabel="main.c" index="0">
-<position/>
+<position info="not_deleted" x="1348" y="28"/>
 </item>
-<item historyLabel="main.c" index="0">
-<position/>
-</item>
-<item historyLabel="main.c" index="0">
-<position/>
-</item>
-<item historyLabel="main.c" index="0">
-<position/>
-</item>
-<item historyLabel="main.c" index="0">
-<position/>
-</item>
-<item historyLabel="main.c" index="0">
-<position/>
-</item>
-<item historyLabel="main.c" index="0">
-<position/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="29678" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="10197" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="26833" y="33"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="10900" y="0"/>
-</item>
-<item historyLabel="startup_stm32f0xx.s" index="2">
-<position info="not_deleted" x="0" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="5313" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="5325" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="11397" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="11230" y="17"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="11397" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="11019" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="11057" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="10900" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="11397" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="11343" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="11057" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="11397" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="10902" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="10900" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="10900" y="0"/>
-</item>
-<item historyLabel="startup_stm32f0xx.s" index="2">
-<position info="not_deleted" x="0" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="10276" y="0"/>
-</item>
-<item historyLabel="main.h" index="3">
-<position info="not_deleted" x="966" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="10720" y="0"/>
-</item>
-<item historyLabel="main.h" index="3">
-<position info="not_deleted" x="1401" y="14"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="10720" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="5432" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="49822" y="0"/>
-</item>
-<item historyLabel="main.h" index="3">
-<position info="not_deleted" x="1401" y="14"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="49822" y="0"/>
-</item>
-<item historyLabel="main.h" index="3">
-<position info="not_deleted" x="1401" y="14"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="49822" y="0"/>
-</item>
-<item historyLabel="main.c" index="0">
-<position/>
-</item>
-<item historyLabel="main.c" index="0">
-<position info="not_deleted" x="49820" y="0"/>
-</item>
-<item historyLabel="main.h" index="3">
+<item historyLabel="main.h" index="2">
 <position info="not_deleted" x="1436" y="15"/>
 </item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="4012" y="0"/>
+</item>
+<item historyLabel="welcome" index="3"/>
+<item historyLabel="welcome" index="3"/>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="10378" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="11931" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="5312" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="12440" y="0"/>
+</item>
+<item historyLabel="startup_stm32f0xx.s" index="4">
+<position/>
+</item>
+<item historyLabel="startup_stm32f0xx.s" index="4">
+<position info="not_deleted" x="3313" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="11677" y="0"/>
+</item>
+<item historyLabel="startup_stm32f0xx.s" index="4">
+<position info="not_deleted" x="0" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="5312" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="5310" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="11679" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="11677" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="11679" y="0"/>
+</item>
+<item historyLabel="main.h" index="5">
+<position info="not_deleted" x="1436" y="15"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="11717" y="15"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="10189" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="26899" y="33"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="24744" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="10199" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="26899" y="33"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="28327" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="5312" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="27971" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="27804" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="27981" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="29317" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="27971" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="27889" y="80"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="27205" y="26"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="7522" y="0"/>
+</item>
+<item historyLabel="main.h" index="6">
+<position info="not_deleted" x="2246" y="22"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="7522" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="7496" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="42164" y="21"/>
+</item>
+<item historyLabel="main.h" index="6">
+<position info="not_deleted" x="2001" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="42164" y="21"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="10202" y="0"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="26899" y="33"/>
+</item>
+<item historyLabel="main.c" index="0">
+<position info="not_deleted" x="8368" y="0"/>
+</item>
 <item active="true" historyLabel="main.c" index="0">
-<position info="not_deleted" x="49820" y="0"/>
+<position info="not_deleted" x="17919" y="29"/>
 </item>
 </navigationHistory>
 <input factoryID="org.eclipse.ui.internal.model.ResourceFactory" path="/" type="8"/>
@@ -475,16 +483,14 @@
 <actionBarAdvisor/>
 </window>
 <mruList>
-<file factoryID="org.coocox.builder.ui.persistent.PersistentElementFactory" id="org.coocox.welcome.ui.WelcomePage" name="" tooltip="">
-<persistable>
-<org.coocox.welcome.ui.WelcomePage/>
-</persistable>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" name="startup_stm32f0xx.s" tooltip="WI-FI_Fan_with_humidity_sensor/components/startup_stm32f0xx.s">
+<persistable path="/WI-FI_Fan_with_humidity_sensor/components/startup_stm32f0xx.s"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f0xx_gpio.c" tooltip="WI-FI_Fan_with_humidity_sensor/stm32f0xx_gpio.c">
+<persistable path="/WI-FI_Fan_with_humidity_sensor/stm32f0xx_gpio.c"/>
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f0xx_gpio.h" tooltip="WI-FI_Fan_with_humidity_sensor/components/stm32f0xx_gpio.h">
 <persistable path="/WI-FI_Fan_with_humidity_sensor/components/stm32f0xx_gpio.h"/>
-</file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" name="startup_stm32f0xx.s" tooltip="WI-FI_Fan_with_humidity_sensor/components/startup_stm32f0xx.s">
-<persistable path="/WI-FI_Fan_with_humidity_sensor/components/startup_stm32f0xx.s"/>
 </file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="utils.h" tooltip="WI-FI_Fan_with_humidity_sensor/utils.h">
 <persistable path="/WI-FI_Fan_with_humidity_sensor/utils.h"/>
@@ -507,14 +513,20 @@
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f0xx_exti.c" tooltip="WI-FI_Fan_with_humidity_sensor/stm32f0xx_exti.c">
 <persistable path="/WI-FI_Fan_with_humidity_sensor/stm32f0xx_exti.c"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f0xx_exti.h" tooltip="WI-FI_Fan_with_humidity_sensor/components/stm32f0xx_exti.h">
-<persistable path="/WI-FI_Fan_with_humidity_sensor/components/stm32f0xx_exti.h"/>
-</file>
 <file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f0xx_gpio.c" tooltip="WI-FI_Fan_with_humidity_sensor/stm32f0xx_gpio.c">
 <persistable path="/WI-FI_Fan_with_humidity_sensor/stm32f0xx_gpio.c"/>
 </file>
-<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="MF52_10K.h" tooltip="WI-FI_Fan_with_humidity_sensor/MF52_10K.h">
-<persistable path="/WI-FI_Fan_with_humidity_sensor/MF52_10K.h"/>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" name="startup_stm32f0xx.s" tooltip="WI-FI_Fan_with_humidity_sensor/components/startup_stm32f0xx.s">
+<persistable path="/WI-FI_Fan_with_humidity_sensor/components/startup_stm32f0xx.s"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f0xx_gpio.h" tooltip="WI-FI_Fan_with_humidity_sensor/components/stm32f0xx_gpio.h">
+<persistable path="/WI-FI_Fan_with_humidity_sensor/components/stm32f0xx_gpio.h"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.asm.AsmEditor" name="startup_stm32f0xx.s" tooltip="WI-FI_Fan_with_humidity_sensor/components/startup_stm32f0xx.s">
+<persistable path="/WI-FI_Fan_with_humidity_sensor/components/startup_stm32f0xx.s"/>
+</file>
+<file factoryID="org.eclipse.ui.part.FileEditorInputFactory" id="org.eclipse.cdt.ui.editor.CEditor" name="stm32f0xx_gpio.h" tooltip="WI-FI_Fan_with_humidity_sensor/components/stm32f0xx_gpio.h">
+<persistable path="/WI-FI_Fan_with_humidity_sensor/components/stm32f0xx_gpio.h"/>
 </file>
 </mruList>
 </workbench>

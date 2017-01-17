@@ -22,7 +22,7 @@ volatile unsigned short network_searching_status_led_counter_g;
 volatile unsigned char esp8266_disabled_counter_g;
 volatile unsigned char esp8266_disabled_timer_g = TIMER14_5S;
 unsigned short checking_connection_status_and_server_availability_timer_g = TIMER14_60S;
-volatile unsigned short visible_network_list_timer_g = TIMER14_10MIN;;
+volatile unsigned short visible_network_list_timer_g = TIMER14_10MIN;
 volatile unsigned char resets_occured_g;
 volatile unsigned short read_humidity_and_temperature_timer_g = TIMER14_10S;
 volatile unsigned short get_fan_switch_state_timer_g;
@@ -108,7 +108,7 @@ void EXTI4_15_IRQHandler() {
       EXTI_ClearITPendingBit(FAN_SWITCH_EXTI_LINE);
 
       set_flag(&general_flags_g, FAN_SWITCH_CHANGED_STATE_FLAG);
-      get_fan_switch_state_timer_g = TIMER14_1S;
+      get_fan_switch_state_timer_g = TIMER14_2S;
    }
 }
 
@@ -289,10 +289,10 @@ int main() {
          if (read_flag(general_flags_g, FAN_SWITCH_CHANGED_STATE_FLAG) && !get_fan_switch_state_timer_g) {
             reset_flag(&general_flags_g, FAN_SWITCH_CHANGED_STATE_FLAG);
 
-            if (GPIO_ReadOutputDataBit(FAN_RELAY_PORT, FAN_RELAY_PIN)) {
-               manually_switched_fan_timeout_g = 0;
-            } else {
+            if (GPIO_ReadInputDataBit(FAN_SWITCH_PORT, FAN_SWITCH_PIN)) {
                manually_switched_fan_timeout_g = manually_switched_fan_timeout_setup_g;
+            } else {
+               manually_switched_fan_timeout_g = 0;
             }
          }
          if (manually_switched_fan_timeout_g || read_flag(general_flags_g, TURN_FAN_ON_FLAG)) {
@@ -444,6 +444,7 @@ unsigned char handle_connect_to_server_task(unsigned int current_piped_task_to_s
       if (is_usart_response_contains_elements(data_to_be_contained, 2) || is_usart_response_contains_element(ESP8226_RESPONSE_ALREADY_CONNECTED)) {
          on_successfully_receive_general_actions(CONNECT_TO_SERVER_TASK);
       } else {
+         reset_flag(&general_flags_g, SERVER_IS_AVAILABLE_FLAG);
          add_error(CONNECT_TO_SERVER_TASK);
       }
    }
@@ -661,6 +662,8 @@ unsigned char handle_send_fan_info_request_task(unsigned int current_piped_task_
       } else {
          if (is_usart_response_contains_element(ESP8226_RESPONSE_OK_STATUS_CODE)) {
             on_successfully_receive_general_actions(SEND_FAN_INFO_REQUEST_TASK);
+
+            set_flag(&general_flags_g, SERVER_IS_AVAILABLE_FLAG);
             last_sent_humidity_g = get_humidity();
             last_sent_temperature_g = get_temperature();
 
@@ -685,6 +688,7 @@ unsigned char handle_send_fan_info_request_task(unsigned int current_piped_task_
                manually_switched_fan_timeout_setup_g = MANUALLY_SWITCHED_FAN_TIMEOUT_DEFAULT_SETUP;
             }
          } else {
+            reset_flag(&general_flags_g, SERVER_IS_AVAILABLE_FLAG);
             add_error(SEND_FAN_INFO_REQUEST_TASK);
          }
       }
