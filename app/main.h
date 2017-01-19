@@ -57,14 +57,13 @@
 #define CONNECT_TO_NETWORK_TASK 4
 //
 #define GET_AP_CONNECTION_STATUS_AND_CONNECT_TASK 16
-#define GET_OWN_IP_ADDRESS_TASK 32
 #define SET_OWN_IP_ADDRESS_TASK 64
 #define CONNECT_TO_SERVER_TASK 128
 #define SET_BYTES_TO_SEND_IN_REQUEST_TASK 256
-#define GET_REQUEST_SENT_AND_RESPONSE_RECEIVED_TASK 512
+//
 #define POST_REQUEST_SENT_TASK 1024
-#define GET_CURRENT_DEFAULT_WIFI_MODE_TASK 2048
-#define SET_DEFAULT_STATION_WIFI_MODE_TASK 4096
+//
+#define SET_CURRENT_WIFI_MODE_AS_STATION_TASK 4096
 #define CLOSE_CONNECTION_TASK 8192
 #define GET_CONNECTION_STATUS_TASK 16384
 #define GET_SERVER_AVAILABILITY_REQUEST_TASK 32768
@@ -113,26 +112,22 @@ typedef enum {
 char USART_OK[] __attribute__ ((section(".text.const"))) = "OK";
 char USART_ERROR[] __attribute__ ((section(".text.const"))) = "ERROR";
 char ESP8226_REQUEST_DISABLE_ECHO[] __attribute__ ((section(".text.const"))) = "ATE0\r\n";
-char ESP8226_REQUEST_GET_VISIBLE_NETWORK_LIST[] __attribute__ ((section(".text.const"))) = "AT+CWLAP\r\n";
-char ESP8226_RESPONSE_VISIBLE_NETWORK_LIST_PREFIX[] __attribute__ ((section(".text.const"))) = "+CWLAP:";
 char ESP8226_REQUEST_GET_AP_CONNECTION_STATUS[] __attribute__ ((section(".text.const"))) = "AT+CWJAP?\r\n";
 char ESP8226_RESPONSE_NOT_CONNECTED_STATUS[] __attribute__ ((section(".text.const"))) = "No AP";
-char ESP8226_REQUEST_CONNECT_TO_NETWORK_AND_SAVE[] __attribute__ ((section(".text.const"))) = "AT+CWJAP_DEF=\"<1>\",\"<2>\"\r\n";
+char ESP8226_REQUEST_CONNECT_TO_NETWORK[] __attribute__ ((section(".text.const"))) = "AT+CWJAP_CUR=\"<1>\",\"<2>\"\r\n";
+char ESP8226_RESPONSE_WI_FI_CONNECTED[] __attribute__ ((section(".text.const"))) = "WIFI CONNECTED";
+char ESP8226_RESPONSE_WI_FI_DISCONNECTED[] __attribute__ ((section(".text.const"))) = "WIFI DISCONNECT";
 char ESP8226_RESPONSE_CONNECTED[] __attribute__ ((section(".text.const"))) = "CONNECT";
 char ESP8226_REQUEST_CONNECT_TO_SERVER[] __attribute__ ((section(".text.const"))) = "AT+CIPSTART=\"TCP\",\"<1>\",<2>\r\n";
 char ESP8226_REQUEST_DISCONNECT_FROM_SERVER[] __attribute__ ((section(".text.const"))) = "AT+CIPCLOSE\r\n";
 char ESP8226_REQUEST_START_SENDING[] __attribute__ ((section(".text.const"))) = "AT+CIPSEND=<1>\r\n";
 char ESP8226_RESPONSE_START_SENDING_READY[] __attribute__ ((section(".text.const"))) = ">";
+char ESP8226_RESPONSE_RECEIVED_BYTES_PREFIX[] __attribute__ ((section(".text.const"))) = "\r\nRecv";
 char ESP8226_RESPONSE_SUCCSESSFULLY_SENT[] __attribute__ ((section(".text.const"))) = "\r\nSEND OK\r\n";
 char ESP8226_RESPONSE_ALREADY_CONNECTED[] __attribute__ ((section(".text.const"))) = "ALREADY CONNECTED";
 char ESP8226_RESPONSE_PREFIX[] __attribute__ ((section(".text.const"))) = "+IPD";
-char ESP8226_REQUEST_GET_CURRENT_DEFAULT_WIFI_MODE[] __attribute__ ((section(".text.const"))) = "AT+CWMODE_DEF?\r\n";
-char ESP8226_RESPONSE_WIFI_MODE_PREFIX[] __attribute__ ((section(".text.const"))) = "+CWMODE_DEF:";
-char ESP8226_RESPONSE_WIFI_STATION_MODE[] __attribute__ ((section(".text.const"))) = "1";
-char ESP8226_REQUEST_SET_DEFAULT_STATION_WIFI_MODE[] __attribute__ ((section(".text.const"))) = "AT+CWMODE_DEF=1\r\n";
-char ESP8226_REQUEST_GET_OWN_IP_ADDRESS[] __attribute__ ((section(".text.const"))) = "AT+CIPSTA_DEF?\r\n";
-char ESP8226_RESPONSE_CURRENT_OWN_IP_ADDRESS_PREFIX[] __attribute__ ((section(".text.const"))) = "+CIPSTA_DEF:ip:";
-char ESP8226_REQUEST_SET_OWN_IP_ADDRESS[] __attribute__ ((section(".text.const"))) = "AT+CIPSTA_DEF=\"<1>\"\r\n";
+char ESP8226_REQUEST_SET_CURRENT_STATION_WIFI_MODE[] __attribute__ ((section(".text.const"))) = "AT+CWMODE_CUR=1\r\n";
+char ESP8226_REQUEST_SET_OWN_IP_ADDRESS[] __attribute__ ((section(".text.const"))) = "AT+CIPSTA_CUR=\"<1>\"\r\n";
 char DEBUG_STATUS_JSON[] __attribute__ ((section(".text.const"))) =
       "{\"gain\":\"<1>\",\"debugInfoIncluded\":<2>,\"errors\":\"<3>\",\"usartOverrunErrors\":\"<4>\",\"usartIdleLineDetections\":\"<5>\",\"usartNoiseDetection\":\"<6>\",\"usartFramingErrors\":\"<7>\",\"lastErrorTask\":\"<8>\",\"usartData\":\"<9>\",\"timeStamp\":\"<10>\"}";
 char STATUS_JSON[] __attribute__ ((section(".text.const"))) = "{\"gain\":\"<1>\",\"debugInfoIncluded\":<2>,\"timeStamp\":\"<3>\"}";
@@ -143,12 +138,12 @@ char TURN_FAN_ON[] __attribute__ ((section(".text.const"))) = "\"turnOn\":true";
 char MANUALLY_TURNED_ON_TIMEOUT[] __attribute__ ((section(".text.const"))) = "manuallyTurnedOnTimeout";
 char RESPONSE_CLOSED_BY_TOMCAT[] __attribute__ ((section(".text.const"))) = "\r\n+IPD,5:0\r\n\r\nCLOSED\r\n";
 char ESP8226_REQUEST_SEND_STATUS_INFO_AND_GET_SERVER_AVAILABILITY[] __attribute__ ((section(".text.const"))) =
-      "POST /server/esp8266/statusInfo HTTP/1.1\r\nContent-Length: <1>\r\nHost: <2>\r\nUser-Agent: ESP8266\r\nContent-Type: application/json\r\nAccept: application/json\r\nConnection: keep-alive\r\n\r\n<3>\r\n";
+      "POST /server/esp8266/statusInfo HTTP/1.1\r\nContent-Length: <1>\r\nHost: <2>\r\nUser-Agent: ESP8266\r\nContent-Type: application/json\r\nAccept: application/json\r\nConnection: close\r\n\r\n<3>\r\n";
 char ESP8226_REQUEST_SEND_FAN_INFO[] __attribute__ ((section(".text.const"))) =
-      "POST /server/esp8266/bathroomFan HTTP/1.1\r\nContent-Length: <1>\r\nHost: <2>\r\nUser-Agent: ESP8266\r\nContent-Type: application/json\r\nAccept: application/json\r\nConnection: keep-alive\r\n\r\n<3>\r\n";
+      "POST /server/esp8266/bathroomFan HTTP/1.1\r\nContent-Length: <1>\r\nHost: <2>\r\nUser-Agent: ESP8266\r\nContent-Type: application/json\r\nAccept: application/json\r\nConnection: close\r\n\r\n<3>\r\n";
 char DEBUG_STATUS_AND_FAN_DATA[] __attribute__ ((section(".text.const"))) =
-      "{\"gain\":\"<1>\",\"debugInfoIncluded\":<2>,\"errors\":\"<3>\",\"usartOverrunErrors\":\"<4>\",\"usartIdleLineDetections\":\"<5>\",\"usartNoiseDetection\":\"<6>\",\"usartFramingErrors\":\"<7>\",\"lastErrorTask\":\"<8>\",\"usartData\":\"<9>\",\"timeStamp\":\"<10>\",\"humidity\":\"<11>\",\"temperature\":\"<12>\"}";
-char STATUS_AND_FAN_DATA[] __attribute__ ((section(".text.const"))) = "{\"gain\":\"<1>\",\"debugInfoIncluded\":<2>,\"timeStamp\":\"<3>\",\"humidity\":\"<4>\",\"temperature\":\"<5>\"}";
+      "{\"gain\":\"<1>\",\"debugInfoIncluded\":<2>,\"errors\":\"<3>\",\"usartOverrunErrors\":\"<4>\",\"usartIdleLineDetections\":\"<5>\",\"usartNoiseDetection\":\"<6>\",\"usartFramingErrors\":\"<7>\",\"lastErrorTask\":\"<8>\",\"usartData\":\"<9>\",\"timeStamp\":\"<10>\",\"humidity\":\"<11>\",\"temperature\":\"<12>\",\"deviceName\":\"<13>\"}";
+char STATUS_AND_FAN_DATA[] __attribute__ ((section(".text.const"))) = "{\"gain\":\"<1>\",\"debugInfoIncluded\":<2>,\"timeStamp\":\"<3>\",\"humidity\":\"<4>\",\"temperature\":\"<5>\",\"deviceName\":\"<6>\"}";
 
 void IWDG_Config();
 void Clock_Config();
@@ -163,13 +158,9 @@ unsigned char handle_get_connection_status_task(unsigned int current_piped_task_
 unsigned char handle_connect_to_network_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
 unsigned char handle_connect_to_server_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
 unsigned char handle_set_bytes_to_send_in_request_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
-unsigned char handle_get_request_sent_and_response_received_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
-unsigned char handle_get_current_default_wifi_mode_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
-unsigned char handle_set_default_station_wifi_mode_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
-unsigned char handle_get_own_ip_address_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
+unsigned char handle_set_current_wifi_mode_as_station_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
 unsigned char handle_set_own_ip_address_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
 unsigned char handle_close_connection_task(unsigned int current_piped_task_to_send, unsigned int sent_flag);
-unsigned char handle_get_visible_network_list_task(unsigned int current_piped_task_to_send, unsigned int sent_task);
 unsigned char handle_get_server_availability_task(unsigned int current_piped_task_to_send);
 unsigned char handle_get_server_availability_request_task(unsigned int current_piped_task_to_send, unsigned int sent_task);
 unsigned char handle_send_fan_info_task(unsigned int current_piped_task_to_send);
@@ -179,9 +170,9 @@ void DMA_Config();
 void USART_Config();
 void EXTERNAL_Interrupt_Config();
 void disable_echo();
-void get_network_list();
+void current_ap_connection_parameters();
 void connect_to_network();
-void get_ap_connection_status();
+void get_ap_connection_status_and_connect();
 void schedule_function_resending(void (*function_to_execute)(), unsigned short timeout, ImmediatelyFunctionExecution execute);
 void get_server_avalability(unsigned int request_task);
 void send_fan_info(unsigned int request_task);
@@ -226,7 +217,7 @@ void set_own_ip_address();
 void close_connection();
 void add_error(unsigned int sent_task);
 void check_connection_status_and_server_availability();
-void check_visible_network_list();
+void get_current_ap_connection_parameters();
 void add_piped_task_into_history(unsigned int task);
 unsigned int get_last_piped_task_in_history();
 void *get_received_usart_error_data();

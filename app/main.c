@@ -22,7 +22,7 @@ volatile unsigned short network_searching_status_led_counter_g;
 volatile unsigned char esp8266_disabled_counter_g;
 volatile unsigned char esp8266_disabled_timer_g = TIMER14_5S;
 unsigned short checking_connection_status_and_server_availability_timer_g = TIMER14_60S;
-volatile unsigned short visible_network_list_timer_g = TIMER14_10MIN;
+volatile unsigned short current_ap_connection_parameters_timer_g = TIMER14_10MIN;
 volatile unsigned char resets_occured_g;
 volatile unsigned short read_humidity_and_temperature_timer_g = TIMER14_10S;
 volatile unsigned short get_fan_switch_state_timer_g;
@@ -64,8 +64,8 @@ void DMA1_Channel1_IRQHandler() {
 void TIM14_IRQHandler() {
    TIM_ClearITPendingBit(TIM14, TIM_IT_Update);
 
-   if (visible_network_list_timer_g) {
-      visible_network_list_timer_g--;
+   if (current_ap_connection_parameters_timer_g) {
+      current_ap_connection_parameters_timer_g--;
    }
    if (checking_connection_status_and_server_availability_timer_g) {
       checking_connection_status_and_server_availability_timer_g--;
@@ -161,10 +161,9 @@ int main() {
    TIMER14_Confing();
 
    add_piped_task_to_send_into_tail(DISABLE_ECHO_TASK);
-   add_piped_task_to_send_into_tail(GET_CURRENT_DEFAULT_WIFI_MODE_TASK);
-   add_piped_task_to_send_into_tail(GET_OWN_IP_ADDRESS_TASK);
-   add_piped_task_to_send_into_tail(GET_AP_CONNECTION_STATUS_AND_CONNECT_TASK);
-   add_piped_task_to_send_into_tail(GET_VISIBLE_NETWORK_LIST_TASK);
+   add_piped_task_to_send_into_tail(SET_CURRENT_WIFI_MODE_AS_STATION_TASK);
+   add_piped_task_to_send_into_tail(SET_OWN_IP_ADDRESS_TASK);
+   add_piped_task_to_send_into_tail(CONNECT_TO_NETWORK_TASK);
    add_piped_task_to_send_into_tail(GET_SERVER_AVAILABILITY_TASK);
 
    last_fan_switch_state_g = GPIO_ReadInputDataBit(FAN_SWITCH_PORT, FAN_SWITCH_PIN);
@@ -183,13 +182,9 @@ int main() {
                usart_data_to_be_transmitted_buffer_g = NULL;
             }
 
-            /*if (is_string_starts_with(usart_data_received_buffer_g, RESPONSE_CLOSED_BY_TOMCAT_PREFIX)
-                  || is_string_starts_with(usart_data_received_buffer_g, RESPONSE_CLOSED_BY_TOMCAT_SUFFIX)) {
-               is_string_starts_with(usart_data_received_buffer_g, RESPONSE_CLOSED_BY_TOMCAT_PREFIX);
-            } else {
+            if (!is_string_starts_with(usart_data_received_buffer_g, RESPONSE_CLOSED_BY_TOMCAT)) {
                sent_task = sent_task_g;
-            }*/
-            sent_task = sent_task_g;
+            }
          } else if (send_usart_data_function_g != NULL && send_usart_data_passed_time_sec >= send_usart_data_timout_sec_g) {
             if (usart_data_to_be_transmitted_buffer_g != NULL) {
                free(usart_data_to_be_transmitted_buffer_g);
@@ -224,25 +219,13 @@ int main() {
                not_handled = handle_set_bytes_to_send_in_request_task(current_piped_task_to_send, sent_task);
             }
             if (not_handled) {
-               not_handled = handle_get_request_sent_and_response_received_task(current_piped_task_to_send, sent_task);
-            }
-            if (not_handled) {
-               not_handled = handle_get_current_default_wifi_mode_task(current_piped_task_to_send, sent_task);
-            }
-            if (not_handled) {
-               not_handled = handle_set_default_station_wifi_mode_task(current_piped_task_to_send, sent_task);
-            }
-            if (not_handled) {
-               not_handled = handle_get_own_ip_address_task(current_piped_task_to_send, sent_task);
+               not_handled = handle_set_current_wifi_mode_as_station_task(current_piped_task_to_send, sent_task);
             }
             if (not_handled) {
                not_handled = handle_set_own_ip_address_task(current_piped_task_to_send, sent_task);
             }
             if (not_handled) {
                not_handled = handle_close_connection_task(current_piped_task_to_send, sent_task);
-            }
-            if (not_handled) {
-               not_handled = handle_get_visible_network_list_task(current_piped_task_to_send, sent_task);
             }
             if (not_handled) {
                not_handled = handle_get_server_availability_task(current_piped_task_to_send);
@@ -259,7 +242,6 @@ int main() {
          }
 
          check_connection_status_and_server_availability();
-         check_visible_network_list();
 
          if (!read_humidity_and_temperature_timer_g) {
             read_humidity_and_temperature_timer_g = TIMER14_30S;
@@ -330,7 +312,7 @@ int main() {
             }
          }
 
-         if (send_usart_data_errors_counter_g >= 10 || is_piped_tasks_scheduler_full()) {
+         if (send_usart_data_errors_counter_g >= 20 || is_piped_tasks_scheduler_full()) {
             reset_device_state();
          }
          if (resets_occured_g >= 5) {
@@ -374,7 +356,7 @@ unsigned char handle_get_connection_status_and_connect_task(unsigned int current
 
    if (current_piped_task_to_send == GET_AP_CONNECTION_STATUS_AND_CONNECT_TASK) {
       not_handled = 0;
-      schedule_function_resending(get_ap_connection_status, 2, EXECUTE_FUNCTION_IMMEDIATELY);
+      schedule_function_resending(get_ap_connection_status_and_connect, 5, EXECUTE_FUNCTION_IMMEDIATELY);
    } else if (read_flag(sent_task, GET_AP_CONNECTION_STATUS_AND_CONNECT_TASK)) {
       not_handled = 0;
 
@@ -384,6 +366,7 @@ unsigned char handle_get_connection_status_and_connect_task(unsigned int current
          if (is_usart_response_contains_element(DEFAULT_ACCESS_POINT_NAME)) {
             // Has already been connected
             set_flag(&general_flags_g, SUCCESSUFULLY_CONNECTED_TO_NETWORK_FLAG);
+            save_default_access_point_gain();
          } else if (is_usart_response_contains_element(ESP8226_RESPONSE_NOT_CONNECTED_STATUS)) {
             reset_flag(&general_flags_g, SUCCESSUFULLY_CONNECTED_TO_NETWORK_FLAG);
             // Connect
@@ -402,7 +385,7 @@ unsigned char handle_get_connection_status_task(unsigned int current_piped_task_
 
    if (current_piped_task_to_send == GET_CONNECTION_STATUS_TASK) {
       not_handled = 0;
-      schedule_function_resending(get_ap_connection_status, 10, EXECUTE_FUNCTION_IMMEDIATELY);
+      schedule_function_resending(get_ap_connection_status_and_connect, 10, EXECUTE_FUNCTION_IMMEDIATELY);
    } else if (read_flag(sent_task, GET_CONNECTION_STATUS_TASK)) {
       not_handled = 0;
 
@@ -432,7 +415,9 @@ unsigned char handle_connect_to_network_task(unsigned int current_piped_task_to_
    } else if (read_flag(sent_task, CONNECT_TO_NETWORK_TASK)) {
       not_handled = 0;
 
-      if (is_usart_response_contains_element(USART_OK)) {
+      if (is_usart_response_contains_element(ESP8226_RESPONSE_WI_FI_CONNECTED) || is_usart_response_contains_element(ESP8226_RESPONSE_WI_FI_DISCONNECTED)) {
+         clear_usart_data_received_buffer();
+      } else if (is_usart_response_contains_element(USART_OK)) {
          on_successfully_receive_general_actions(CONNECT_TO_NETWORK_TASK);
 
          set_flag(&general_flags_g, SUCCESSUFULLY_CONNECTED_TO_NETWORK_FLAG);
@@ -482,84 +467,19 @@ unsigned char handle_set_bytes_to_send_in_request_task(unsigned int current_pipe
    return not_handled;
 }
 
-unsigned char handle_get_request_sent_and_response_received_task(unsigned int current_piped_task_to_send, unsigned int sent_task) {
+unsigned char handle_set_current_wifi_mode_as_station_task(unsigned int current_piped_task_to_send, unsigned int sent_task) {
    unsigned char not_handled = 1;
 
-   if (current_piped_task_to_send == GET_REQUEST_SENT_AND_RESPONSE_RECEIVED_TASK) {
-      not_handled = 0;
-      schedule_global_function_resending_and_send_request(GET_REQUEST_SENT_AND_RESPONSE_RECEIVED_TASK, 10);
-   } else if (read_flag(sent_task, GET_REQUEST_SENT_AND_RESPONSE_RECEIVED_TASK)) {
-      not_handled = 0;
-
-      char *data_to_be_contained[] = {ESP8226_RESPONSE_SUCCSESSFULLY_SENT, ESP8226_RESPONSE_PREFIX};
-      if (is_usart_response_contains_elements(data_to_be_contained, 2)) {
-         on_successfully_receive_general_actions(GET_REQUEST_SENT_AND_RESPONSE_RECEIVED_TASK);
-      } else {
-         //resend_usart_get_request(GET_REQUEST_SENT_AND_RESPONSE_RECEIVED_FLAG);
-         add_error(GET_REQUEST_SENT_AND_RESPONSE_RECEIVED_TASK);
-      }
-   }
-   return not_handled;
-}
-
-unsigned char handle_get_current_default_wifi_mode_task(unsigned int current_piped_task_to_send, unsigned int sent_task) {
-   unsigned char not_handled = 1;
-
-   if (current_piped_task_to_send == GET_CURRENT_DEFAULT_WIFI_MODE_TASK) {
-      not_handled = 0;
-      schedule_function_resending(get_current_default_wifi_mode, 2, EXECUTE_FUNCTION_IMMEDIATELY);
-   } else if (read_flag(sent_task, GET_CURRENT_DEFAULT_WIFI_MODE_TASK)) {
-      not_handled = 0;
-
-      if (is_usart_response_contains_element(ESP8226_RESPONSE_WIFI_MODE_PREFIX)) {
-         on_successfully_receive_general_actions(GET_CURRENT_DEFAULT_WIFI_MODE_TASK);
-
-         if (!is_usart_response_contains_element(ESP8226_RESPONSE_WIFI_STATION_MODE)) {
-            add_piped_task_to_send_into_head(SET_DEFAULT_STATION_WIFI_MODE_TASK);
-         }
-      } else {
-         add_error(GET_CURRENT_DEFAULT_WIFI_MODE_TASK);
-      }
-   }
-   return not_handled;
-}
-
-unsigned char handle_set_default_station_wifi_mode_task(unsigned int current_piped_task_to_send, unsigned int sent_task) {
-   unsigned char not_handled = 1;
-
-   if (current_piped_task_to_send == SET_DEFAULT_STATION_WIFI_MODE_TASK) {
+   if (current_piped_task_to_send == SET_CURRENT_WIFI_MODE_AS_STATION_TASK) {
       not_handled = 0;
       schedule_function_resending(set_default_wifi_mode, 2, EXECUTE_FUNCTION_IMMEDIATELY);
-   } else if (read_flag(sent_task, SET_DEFAULT_STATION_WIFI_MODE_TASK)) {
+   } else if (read_flag(sent_task, SET_CURRENT_WIFI_MODE_AS_STATION_TASK)) {
       not_handled = 0;
 
       if (is_usart_response_contains_element(USART_OK)) {
-         on_successfully_receive_general_actions(SET_DEFAULT_STATION_WIFI_MODE_TASK);
+         on_successfully_receive_general_actions(SET_CURRENT_WIFI_MODE_AS_STATION_TASK);
       } else {
-         add_error(SET_DEFAULT_STATION_WIFI_MODE_TASK);
-      }
-   }
-   return not_handled;
-}
-
-unsigned char handle_get_own_ip_address_task(unsigned int current_piped_task_to_send, unsigned int sent_task) {
-   unsigned char not_handled = 1;
-
-   if (current_piped_task_to_send == GET_OWN_IP_ADDRESS_TASK) {
-      not_handled = 0;
-      schedule_function_resending(get_own_ip_address, 5, EXECUTE_FUNCTION_IMMEDIATELY);
-   } else if (read_flag(sent_task, GET_OWN_IP_ADDRESS_TASK)) {
-      not_handled = 0;
-
-      if (is_usart_response_contains_element(ESP8226_OWN_IP_ADDRESS) || is_usart_response_contains_element(ESP8226_RESPONSE_CURRENT_OWN_IP_ADDRESS_PREFIX)) {
-         on_successfully_receive_general_actions(GET_OWN_IP_ADDRESS_TASK);
-
-         unsigned char some_another_ip = !is_usart_response_contains_element(ESP8226_OWN_IP_ADDRESS);
-         if (some_another_ip) {
-            add_piped_task_to_send_into_head(SET_OWN_IP_ADDRESS_TASK);
-         }
-      } else {
-         add_error(GET_OWN_IP_ADDRESS_TASK);
+         add_error(SET_CURRENT_WIFI_MODE_AS_STATION_TASK);
       }
    }
    return not_handled;
@@ -614,7 +534,7 @@ unsigned char handle_get_server_availability_request_task(unsigned int current_p
    if (current_piped_task_to_send == GET_SERVER_AVAILABILITY_REQUEST_TASK) {
       not_handled = 0;
       // Part 2
-      schedule_global_function_resending_and_send_request(GET_SERVER_AVAILABILITY_REQUEST_TASK, 10);
+      schedule_global_function_resending_and_send_request(GET_SERVER_AVAILABILITY_REQUEST_TASK, 5);
    } else if (read_flag(sent_task, GET_SERVER_AVAILABILITY_REQUEST_TASK)) {
       not_handled = 0;
 
@@ -625,7 +545,9 @@ unsigned char handle_get_server_availability_request_task(unsigned int current_p
          clear_usart_data_received_buffer();
       } else {
 
-         if (is_usart_response_contains_element(ESP8226_RESPONSE_OK_STATUS_CODE)) {
+         if (is_string_starts_with(usart_data_received_buffer_g, ESP8226_RESPONSE_RECEIVED_BYTES_PREFIX)) {
+            clear_usart_data_received_buffer();
+         } else if (is_usart_response_contains_element(ESP8226_RESPONSE_OK_STATUS_CODE)) {
             on_successfully_receive_general_actions(GET_SERVER_AVAILABILITY_REQUEST_TASK);
 
             if (is_usart_response_contains_element(SERVER_STATUS_INCLUDE_DEBUG_INFO)) {
@@ -662,7 +584,7 @@ unsigned char handle_send_fan_info_request_task(unsigned int current_piped_task_
    if (current_piped_task_to_send == SEND_FAN_INFO_REQUEST_TASK) {
       not_handled = 0;
       // Part 2
-      schedule_global_function_resending_and_send_request(SEND_FAN_INFO_REQUEST_TASK, 10);
+      schedule_global_function_resending_and_send_request(SEND_FAN_INFO_REQUEST_TASK, 5);
    } else if (read_flag(sent_task, SEND_FAN_INFO_REQUEST_TASK)) {
       not_handled = 0;
 
@@ -672,7 +594,9 @@ unsigned char handle_send_fan_info_request_task(unsigned int current_piped_task_
          // Sometimes only "SEND OK" is received. Another data will be received later
          clear_usart_data_received_buffer();
       } else {
-         if (is_usart_response_contains_element(ESP8226_RESPONSE_OK_STATUS_CODE)) {
+         if (is_string_starts_with(usart_data_received_buffer_g, ESP8226_RESPONSE_RECEIVED_BYTES_PREFIX)) {
+            clear_usart_data_received_buffer();
+         } else if (is_usart_response_contains_element(ESP8226_RESPONSE_OK_STATUS_CODE)) {
             on_successfully_receive_general_actions(SEND_FAN_INFO_REQUEST_TASK);
 
             set_flag(&general_flags_g, SERVER_IS_AVAILABLE_FLAG);
@@ -703,25 +627,6 @@ unsigned char handle_send_fan_info_request_task(unsigned int current_piped_task_
             reset_flag(&general_flags_g, SERVER_IS_AVAILABLE_FLAG);
             add_error(SEND_FAN_INFO_REQUEST_TASK);
          }
-      }
-   }
-   return not_handled;
-}
-
-unsigned char handle_get_visible_network_list_task(unsigned int current_piped_task_to_send, unsigned int sent_task) {
-   unsigned char not_handled = 1;
-
-   if (current_piped_task_to_send == GET_VISIBLE_NETWORK_LIST_TASK) {
-      not_handled = 0;
-      schedule_function_resending(get_network_list, 20, EXECUTE_FUNCTION_IMMEDIATELY);
-   } else if (read_flag(sent_task, GET_VISIBLE_NETWORK_LIST_TASK)) {
-      not_handled = 0;
-
-      if (is_usart_response_contains_element(ESP8226_RESPONSE_VISIBLE_NETWORK_LIST_PREFIX)) {
-         on_successfully_receive_general_actions(GET_VISIBLE_NETWORK_LIST_TASK);
-         save_default_access_point_gain();
-      } else {
-         add_error(GET_VISIBLE_NETWORK_LIST_TASK);
       }
    }
    return not_handled;
@@ -764,22 +669,15 @@ void reset_device_state() {
    sent_task_g = 0;
    send_usart_data_errors_counter_g = 0;
 
-   add_piped_task_to_send_into_tail(GET_AP_CONNECTION_STATUS_AND_CONNECT_TASK);
-   add_piped_task_to_send_into_tail(GET_SERVER_AVAILABILITY_TASK);
+   checking_connection_status_and_server_availability_timer_g = 0;
+   check_connection_status_and_server_availability();
 }
 
 void check_connection_status_and_server_availability() {
-   if (checking_connection_status_and_server_availability_timer_g == 0 && is_piped_tasks_scheduler_empty()) {
+   if (checking_connection_status_and_server_availability_timer_g == 0 && is_piped_tasks_scheduler_empty() && send_usart_data_function_g == NULL) {
       checking_connection_status_and_server_availability_timer_g = TIMER14_60S;
-      add_piped_task_to_send_into_tail(GET_CONNECTION_STATUS_TASK);
+      add_piped_task_to_send_into_tail(GET_AP_CONNECTION_STATUS_AND_CONNECT_TASK);
       add_piped_task_to_send_into_tail(GET_SERVER_AVAILABILITY_TASK);
-   }
-}
-
-void check_visible_network_list() {
-   if (!visible_network_list_timer_g && is_piped_tasks_scheduler_empty()) {
-      visible_network_list_timer_g = TIMER14_10MIN;
-      add_piped_task_to_send_into_tail(GET_VISIBLE_NETWORK_LIST_TASK);
    }
 }
 
@@ -816,7 +714,7 @@ char *generate_request(char *request_template, char *json_payload_template, char
    if (read_flag(general_flags_g, SEND_DEBUG_INFO_FLAG)) {
       status_json = add_debug_info(json_debug_payload_template, gain, debug_info_included, response_timestamp, humidity, temperature);
    } else {
-      char *parameters_for_status[] = {gain, debug_info_included, response_timestamp, humidity, temperature, NULL};
+      char *parameters_for_status[] = {gain, debug_info_included, response_timestamp, humidity, temperature, ESP8226_OWN_NAME, NULL};
       status_json = set_string_parameters(json_payload_template, parameters_for_status);
    }
    free(gain);
@@ -846,7 +744,7 @@ void *add_debug_info(char *template, char *gain, char *debug_info_included, char
    char *received_usart_error_data = last_error_task_g && received_usart_error_data_g != NULL ? received_usart_error_data_g : "";
    char *parameters_for_status[] = {gain, debug_info_included, errors_amount_string, usart_overrun_errors_counter_string,
          usart_idle_line_detection_counter_string, usart_noise_detection_counter_string, usart_framing_errors_counter_string,
-         last_error_task_string, received_usart_error_data, response_timestamp, humidity, temperature, NULL};
+         last_error_task_string, received_usart_error_data, response_timestamp, humidity, temperature, ESP8226_OWN_NAME, NULL};
    char *status_json = set_string_parameters(template, parameters_for_status);
 
    free(errors_amount_string);
@@ -858,11 +756,6 @@ void *add_debug_info(char *template, char *gain, char *debug_info_included, char
 
    last_error_task_g = 0;
    return status_json;
-}
-
-void get_own_ip_address() {
-   send_usard_data(ESP8226_REQUEST_GET_OWN_IP_ADDRESS);
-   set_flag(&sent_task_g, GET_OWN_IP_ADDRESS_TASK);
 }
 
 void set_own_ip_address() {
@@ -877,14 +770,9 @@ void close_connection() {
    set_flag(&sent_task_g, CLOSE_CONNECTION_TASK);
 }
 
-void get_current_default_wifi_mode() {
-   send_usard_data(ESP8226_REQUEST_GET_CURRENT_DEFAULT_WIFI_MODE);
-   set_flag(&sent_task_g, GET_CURRENT_DEFAULT_WIFI_MODE_TASK);
-}
-
 void set_default_wifi_mode() {
-   send_usard_data(ESP8226_REQUEST_SET_DEFAULT_STATION_WIFI_MODE);
-   set_flag(&sent_task_g, SET_DEFAULT_STATION_WIFI_MODE_TASK);
+   send_usard_data(ESP8226_REQUEST_SET_CURRENT_STATION_WIFI_MODE);
+   set_flag(&sent_task_g, SET_CURRENT_WIFI_MODE_AS_STATION_TASK);
 }
 
 void prepare_http_request_without_parameters(char request_template[], unsigned int request_task) {
@@ -1170,19 +1058,14 @@ void disable_echo() {
    set_flag(&sent_task_g, DISABLE_ECHO_TASK);
 }
 
-void get_network_list() {
-   send_usard_data(ESP8226_REQUEST_GET_VISIBLE_NETWORK_LIST);
-   set_flag(&sent_task_g, GET_VISIBLE_NETWORK_LIST_TASK);
-}
-
-void get_ap_connection_status() {
+void get_ap_connection_status_and_connect() {
    send_usard_data(ESP8226_REQUEST_GET_AP_CONNECTION_STATUS);
    set_flag(&sent_task_g, GET_AP_CONNECTION_STATUS_AND_CONNECT_TASK);
 }
 
 void connect_to_network() {
    char *parameters[] = {DEFAULT_ACCESS_POINT_NAME, DEFAULT_ACCESS_POINT_PASSWORD, NULL};
-   usart_data_to_be_transmitted_buffer_g = set_string_parameters(ESP8226_REQUEST_CONNECT_TO_NETWORK_AND_SAVE, parameters);
+   usart_data_to_be_transmitted_buffer_g = set_string_parameters(ESP8226_REQUEST_CONNECT_TO_NETWORK, parameters);
    send_usard_data(usart_data_to_be_transmitted_buffer_g);
    set_flag(&sent_task_g, CONNECT_TO_NETWORK_TASK);
 }
