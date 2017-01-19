@@ -714,7 +714,7 @@ char *generate_request(char *request_template, char *json_payload_template, char
    if (read_flag(general_flags_g, SEND_DEBUG_INFO_FLAG)) {
       status_json = add_debug_info(json_debug_payload_template, gain, debug_info_included, response_timestamp, humidity, temperature);
    } else {
-      char *parameters_for_status[] = {gain, debug_info_included, response_timestamp, humidity, temperature, ESP8226_OWN_NAME, NULL};
+      char *parameters_for_status[] = {gain, debug_info_included, response_timestamp, ESP8226_OWN_NAME, humidity, temperature, NULL};
       status_json = set_string_parameters(json_payload_template, parameters_for_status);
    }
    free(gain);
@@ -744,7 +744,7 @@ void *add_debug_info(char *template, char *gain, char *debug_info_included, char
    char *received_usart_error_data = last_error_task_g && received_usart_error_data_g != NULL ? received_usart_error_data_g : "";
    char *parameters_for_status[] = {gain, debug_info_included, errors_amount_string, usart_overrun_errors_counter_string,
          usart_idle_line_detection_counter_string, usart_noise_detection_counter_string, usart_framing_errors_counter_string,
-         last_error_task_string, received_usart_error_data, response_timestamp, humidity, temperature, ESP8226_OWN_NAME, NULL};
+         last_error_task_string, received_usart_error_data, response_timestamp, ESP8226_OWN_NAME, humidity, temperature, NULL};
    char *status_json = set_string_parameters(template, parameters_for_status);
 
    free(errors_amount_string);
@@ -870,43 +870,45 @@ void on_successfully_receive_general_actions(unsigned int sent_task) {
    reset_flag(&sent_task_g, sent_task);
 }
 
-// +CWLAP:("Asus",-74,...)
+void fill_default_access_point_gain() {
+   default_access_point_gain_g[DEFAULT_ACCESS_POINT_GAIN_SIZE - 1] = '1';
+   default_access_point_gain_g[DEFAULT_ACCESS_POINT_GAIN_SIZE - 2] = '-';
+}
+
+// +CWLAP:("Asus","mac:address",7,-70)
 void save_default_access_point_gain() {
    if (!is_usart_response_contains_element(DEFAULT_ACCESS_POINT_NAME)) {
       return;
    }
 
-   unsigned char first_comma_is_found = 0;
-   char *access_point_starting_position = strstr(usart_data_received_buffer_g, DEFAULT_ACCESS_POINT_NAME);
+   for (unsigned char i = 0; i < DEFAULT_ACCESS_POINT_GAIN_SIZE; i++) {
+      default_access_point_gain_g[i] = ' ';
+   }
 
-   if (access_point_starting_position == NULL) {
-      for (unsigned char i = 0; i < DEFAULT_ACCESS_POINT_GAIN_SIZE; i++) {
-         default_access_point_gain_g[i] = ' ';
+   char *current_character = strstr(usart_data_received_buffer_g, DEFAULT_ACCESS_POINT_NAME);
+
+   if (current_character == NULL) {
+      fill_default_access_point_gain();
+      return;
+   }
+
+   for (unsigned char signal_strength_comma_position = 3; signal_strength_comma_position > 0; current_character++) {
+      if (*current_character == ',') {
+         signal_strength_comma_position--;
+      }
+
+      if (*current_character == '\0') {
+         fill_default_access_point_gain();
+         return;
       }
    }
 
-   while (*access_point_starting_position != '\0') {
-      if (first_comma_is_found && *access_point_starting_position == ',') {
-         access_point_starting_position--;
+   for (unsigned char i = 0; i  < DEFAULT_ACCESS_POINT_GAIN_SIZE; i++, current_character++) {
+      if (*current_character == '-' || (*current_character >= '0' && *current_character <= '9')) {
+         default_access_point_gain_g[i] = *current_character;
+      } else {
          break;
       }
-
-      if (*access_point_starting_position == ',') {
-         first_comma_is_found = 1;
-      }
-      access_point_starting_position++;
-   }
-
-   for (unsigned char i = DEFAULT_ACCESS_POINT_GAIN_SIZE - 1; i != 0xFF; i--) {
-      if (*access_point_starting_position == ',') {
-         for (unsigned char i2 = i; i2 != 0xFF; i2--) {
-            default_access_point_gain_g[i2] = ' ';
-         }
-         break;
-      }
-
-      default_access_point_gain_g[i] = *access_point_starting_position;
-      access_point_starting_position--;
    }
 }
 
@@ -1340,6 +1342,10 @@ float get_humidity() {
    float rh = (voltage - HIH_VOLTAGE_AT_0RH) / HIH_SLOPE;
    float temperature = get_temperature();
    float true_rh = rh / (1.0546 - 0.00216 * temperature);
+
+   if (true_rh > 100.0f) {
+      return 100.0f;
+   }
    return true_rh;
 }
 

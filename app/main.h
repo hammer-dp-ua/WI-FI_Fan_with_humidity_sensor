@@ -129,8 +129,8 @@ char ESP8226_RESPONSE_PREFIX[] __attribute__ ((section(".text.const"))) = "+IPD"
 char ESP8226_REQUEST_SET_CURRENT_STATION_WIFI_MODE[] __attribute__ ((section(".text.const"))) = "AT+CWMODE_CUR=1\r\n";
 char ESP8226_REQUEST_SET_OWN_IP_ADDRESS[] __attribute__ ((section(".text.const"))) = "AT+CIPSTA_CUR=\"<1>\"\r\n";
 char DEBUG_STATUS_JSON[] __attribute__ ((section(".text.const"))) =
-      "{\"gain\":\"<1>\",\"debugInfoIncluded\":<2>,\"errors\":\"<3>\",\"usartOverrunErrors\":\"<4>\",\"usartIdleLineDetections\":\"<5>\",\"usartNoiseDetection\":\"<6>\",\"usartFramingErrors\":\"<7>\",\"lastErrorTask\":\"<8>\",\"usartData\":\"<9>\",\"timeStamp\":\"<10>\"}";
-char STATUS_JSON[] __attribute__ ((section(".text.const"))) = "{\"gain\":\"<1>\",\"debugInfoIncluded\":<2>,\"timeStamp\":\"<3>\"}";
+      "{\"gain\":\"<1>\",\"debugInfoIncluded\":<2>,\"errors\":\"<3>\",\"usartOverrunErrors\":\"<4>\",\"usartIdleLineDetections\":\"<5>\",\"usartNoiseDetection\":\"<6>\",\"usartFramingErrors\":\"<7>\",\"lastErrorTask\":\"<8>\",\"usartData\":\"<9>\",\"timeStamp\":\"<10>\",\"deviceName\":\"<11>\"}";
+char STATUS_JSON[] __attribute__ ((section(".text.const"))) = "{\"gain\":\"<1>\",\"debugInfoIncluded\":<2>,\"timeStamp\":\"<3>\",\"deviceName\":\"<4>\"}";
 char ESP8226_RESPONSE_OK_STATUS_CODE[] __attribute__ ((section(".text.const"))) = "\"statusCode\":\"OK\"";
 char ESP8226_RESPONSE_HTTP_STATUS_400_BAD_REQUEST[] __attribute__ ((section(".text.const"))) = "HTTP/1.1 400 Bad Request";
 char SERVER_STATUS_INCLUDE_DEBUG_INFO[] __attribute__ ((section(".text.const"))) = "\"includeDebugInfo\":true";
@@ -142,8 +142,8 @@ char ESP8226_REQUEST_SEND_STATUS_INFO_AND_GET_SERVER_AVAILABILITY[] __attribute_
 char ESP8226_REQUEST_SEND_FAN_INFO[] __attribute__ ((section(".text.const"))) =
       "POST /server/esp8266/bathroomFan HTTP/1.1\r\nContent-Length: <1>\r\nHost: <2>\r\nUser-Agent: ESP8266\r\nContent-Type: application/json\r\nAccept: application/json\r\nConnection: close\r\n\r\n<3>\r\n";
 char DEBUG_STATUS_AND_FAN_DATA[] __attribute__ ((section(".text.const"))) =
-      "{\"gain\":\"<1>\",\"debugInfoIncluded\":<2>,\"errors\":\"<3>\",\"usartOverrunErrors\":\"<4>\",\"usartIdleLineDetections\":\"<5>\",\"usartNoiseDetection\":\"<6>\",\"usartFramingErrors\":\"<7>\",\"lastErrorTask\":\"<8>\",\"usartData\":\"<9>\",\"timeStamp\":\"<10>\",\"humidity\":\"<11>\",\"temperature\":\"<12>\",\"deviceName\":\"<13>\"}";
-char STATUS_AND_FAN_DATA[] __attribute__ ((section(".text.const"))) = "{\"gain\":\"<1>\",\"debugInfoIncluded\":<2>,\"timeStamp\":\"<3>\",\"humidity\":\"<4>\",\"temperature\":\"<5>\",\"deviceName\":\"<6>\"}";
+      "{\"gain\":\"<1>\",\"debugInfoIncluded\":<2>,\"errors\":\"<3>\",\"usartOverrunErrors\":\"<4>\",\"usartIdleLineDetections\":\"<5>\",\"usartNoiseDetection\":\"<6>\",\"usartFramingErrors\":\"<7>\",\"lastErrorTask\":\"<8>\",\"usartData\":\"<9>\",\"timeStamp\":\"<10>\",\"deviceName\":\"<11>\",\"humidity\":\"<12>\",\"temperature\":\"<13>\"}";
+char STATUS_AND_FAN_DATA[] __attribute__ ((section(".text.const"))) = "{\"gain\":\"<1>\",\"debugInfoIncluded\":<2>,\"timeStamp\":\"<3>\",\"deviceName\":\"<4>\",\"humidity\":\"<5>\",\"temperature\":\"<6>\"}";
 
 void IWDG_Config();
 void Clock_Config();
